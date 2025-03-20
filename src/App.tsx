@@ -8,6 +8,7 @@ import RegistrationForm from "./pages/Register";
 import SignInPage from "./pages/SIgnInPage";
 import MyAccount from "./pages/MyAccount";
 import AttendanceReport from "./pages/AttendanceReport";
+import APItest from "./pages/APItest";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route index path="/" element={<RegistrationForm />}></Route>
         <Route path="sign-in" element={<SignInPage />}></Route>
+        <Route path="api" element={<APItest />}></Route>
 
         <Route element={<Layout />}>
           <Route path="/Dashboard" element={<Dashboard />}></Route>

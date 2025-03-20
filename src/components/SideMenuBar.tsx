@@ -6,11 +6,14 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
+import { RootState } from "../redux/store";
+import { useSelector } from "react-redux";
 type Props = {
   current: string;
 };
 
 export default function SideMenuBar({ current }: Props) {
+  const usr = useSelector((state: RootState) => state.user);
   const nav = useNavigate();
   return (
     <div className="bg-white   w-[250px] ">
@@ -25,7 +28,7 @@ export default function SideMenuBar({ current }: Props) {
         </div>
         <div>
           <p className="font-poppins font-semibold text-[#1D9BF0] text-[20px] text-center">
-            Wanewa Netshodwe
+            {usr.fullName} {usr.surname}
           </p>
         </div>
       </div>

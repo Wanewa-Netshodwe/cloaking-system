@@ -1,59 +1,63 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import SideMenuBar from "../components/SideMenuBar";
-import GraphItem from "../components/GraphItem";
-import Clock from "react-clock";
-import {
-  faRightToBracket,
-  faPen,
-  faLock,
-  faCamera,
-} from "@fortawesome/free-solid-svg-icons";
-import { useSelector } from "react-redux";
-import { RootState } from "../redux/store";
-import GraphItemHours from "../components/GraphItemHours";
-import Annoucements from "../components/Annoucements";
-import { DayPicker, getDefaultClassNames } from "react-day-picker";
+import { faPen, faLock, faCamera } from "@fortawesome/free-solid-svg-icons";
 import "react-day-picker/style.css";
 import "../components/clock.css";
-import AnimatedNumbers from "react-animated-numbers";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { GenerateAvator } from "../utils/GenerateAvator";
+import Spinner from "../components/Spinner";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
 
 type Props = {};
 
 export default function MyAccount({}: Props) {
-  const defaultClassNames = getDefaultClassNames();
-  const submitDatabase = () => {};
-  const [value, setValue] = useState(new Date());
-
-  useEffect(() => {
-    const interval = setInterval(() => setValue(new Date()), 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
-  let options = {
-    useCustomTime: false, // set this to true
-    width: "300px",
-    border: true,
-    borderColor: "#2e2e2e",
-    baseColor: "#17a2b8",
-    centerColor: "#459cff",
-    centerBorderColor: "#ffffff",
-    handColors: {
-      second: "#d81c7a",
-      minute: "#ffffff",
-      hour: "#ffffff",
-    },
-    seconds: 1, // set your
-    minutes: 10, // own
-    hours: 22, // time here.
+  const [image, setImage] = useState("");
+  const fileInputRef = useRef(null);
+  const handleClick = () => {
+    //@ts-ignore
+    fileInputRef.current.click();
   };
-  type ValuePiece = Date | null;
 
-  type Value = ValuePiece | [ValuePiece, ValuePiece];
-  const [value2, onChange] = useState<Value>(new Date());
+  const handleFileChange = (event: any) => {
+    const file = event.target.files[0];
+    if (file) {
+      let i = URL.createObjectURL(file);
+      setImage(i);
+    }
+  };
+  const usr = useSelector((state: RootState) => state.user);
+  const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState(usr.emailAddress);
+  const [contact, setContact] = useState(usr.contactNo);
+  const [first_name, setFirstname] = useState(usr.fullName);
+  const [last_name, setLastname] = useState(usr.surname);
+  const [student_num, setStudentNum] = useState(usr.studentNumber);
+  const [gender, setGender] = useState(usr.gender);
+  const handleChangeEmail = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(event.target.value);
+  };
+  const handleChangeFirstName = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFirstname(event.target.value);
+  };
+  const handleChangeLastName = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLastname(event.target.value);
+  };
+  const handleChangeStudentNumber = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setStudentNum(event.target.value);
+  };
+  const handleChangeGender = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setGender(event.target.value);
+  };
+  const handleChangeContact = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setContact(event.target.value);
+  };
+
   return (
     <div className="w-[100vw] h-[120%] flex  bg-[#F3F8FB] border-2">
       <SideMenuBar current="MyAccount" />
@@ -64,11 +68,15 @@ export default function MyAccount({}: Props) {
             <div className="w-full  flex items-center  justify-end bg-[#AAD9F9] h-[100px]">
               <div className="mr-16 flex gap-6">
                 <FontAwesomeIcon
+                  onClick={() => {
+                    setEditing(true);
+                  }}
                   icon={faPen}
                   size="1x"
                   color="white"
                   className="hover:cursor-pointer hover:text-[#254f7b]"
                 />
+
                 <FontAwesomeIcon
                   icon={faLock}
                   size="1x"
@@ -80,16 +88,33 @@ export default function MyAccount({}: Props) {
             <div className="absolute top-3 left-[467px]">
               <div className="border-4 relative border-white flex flex-col items-center justify-center w-[160px] rounded-full p-2 ">
                 <img
-                  src={GenerateAvator("jj")}
+                  src={
+                    image.length > 4
+                      ? image
+                      : GenerateAvator(`${usr.fullName} ${usr.surname}`)
+                  }
                   className="w-[140px] h-[140px]  rounded-full"
                   alt="ii"
                 />
 
                 <div className="bg-gray-700  -bottom-10 p-2 h-[60px] w-[60px] items-center justify-center flex   absolute rounded-full">
-                  <FontAwesomeIcon icon={faCamera} size="2x" color="white" />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleFileChange}
+                  />
+                  <FontAwesomeIcon
+                    onClick={handleClick}
+                    className="hover:cursor-pointer"
+                    icon={faCamera}
+                    size="2x"
+                    color="white"
+                  />
                 </div>
                 <p className="absolute -bottom-20 font-poppins  text-center text-[#7e7e7e] text-[18px] font-semibold w-[580px]">
-                  Wanewa Netshodwe
+                  {usr.fullName} {usr.surname}
                 </p>
               </div>
             </div>
@@ -101,44 +126,126 @@ export default function MyAccount({}: Props) {
               <div className="mt-4 flex gap-5">
                 <div className="w-[350px]">
                   <p className="text-[#83ACD8] font-poppins ">First Name</p>
-                  <p className=" font-poppins  ">221661561</p>
+                  {editing ? (
+                    <input
+                      value={`${first_name}`}
+                      onChange={handleChangeFirstName}
+                      placeholder={`${first_name}`}
+                      className="mt-1 
+                pl-2 font-poppins text-[#434343] rounded-md
+                placeholder:pl-2 focus:outline-none
+              w-[250px] h-[35px] border-2 border-[#83ACD8]"
+                      type="text"
+                    ></input>
+                  ) : (
+                    <p className=" font-poppins  ">{first_name}</p>
+                  )}
                 </div>
                 <div className="w-[350px]">
                   <p className="text-[#83ACD8] font-poppins ">Last Name</p>
-                  <p className=" font-poppins  ">221661561</p>
+                  {editing ? (
+                    <input
+                      value={`${last_name}`}
+                      onChange={handleChangeLastName}
+                      className="mt-1 
+                pl-2 font-poppins text-[#434343] rounded-md
+                placeholder:pl-2 focus:outline-none
+              w-[250px] h-[35px] border-2 border-[#83ACD8]"
+                      type="text"
+                    ></input>
+                  ) : (
+                    <p className=" font-poppins  ">{last_name}</p>
+                  )}
                 </div>
               </div>
               <div className="mt-6 flex gap-5">
                 <div className="w-[350px]">
                   <p className="text-[#83ACD8] font-poppins ">Contact number</p>
-                  <p className=" font-poppins  ">221661561</p>
+                  {editing ? (
+                    <input
+                      value={`${contact}`}
+                      onChange={handleChangeContact}
+                      className="mt-1 
+                pl-2 font-poppins text-[#434343] rounded-md
+                placeholder:pl-2 focus:outline-none
+              w-[250px] h-[35px] border-2 border-[#83ACD8]"
+                      type="text"
+                    ></input>
+                  ) : (
+                    <p className=" font-poppins  ">{contact}</p>
+                  )}
                 </div>
                 <div className="w-[350px]">
                   <p className="text-[#83ACD8] font-poppins ">Gender</p>
-                  <p className=" font-poppins  ">221661561</p>
+                  {editing ? (
+                    <select
+                      value={gender}
+                      onChange={handleChangeGender}
+                      className=" w-[250px]  text-[#4f4f4f] focus:outline-none pl-2  h-[35px] border-2 rounded-md border-[#83ACD8]"
+                    >
+                      <option className="font-poppins ">Male</option>
+                      <option className="font-poppins">Female</option>
+                    </select>
+                  ) : (
+                    <p className=" font-poppins  ">{gender}</p>
+                  )}
                 </div>
               </div>
               <div className="mt-6 flex gap-5">
                 <div className="w-[350px]">
                   <p className="text-[#83ACD8] font-poppins ">Student Number</p>
-                  <p className=" font-poppins  ">221661561</p>
+                  {editing ? (
+                    <input
+                      value={`${student_num}`}
+                      onChange={handleChangeStudentNumber}
+                      className="mt-1 
+                pl-2 font-poppins text-[#434343] rounded-md
+                placeholder:pl-2 focus:outline-none
+              w-[250px] h-[35px] border-2 border-[#83ACD8]"
+                      type="text"
+                    ></input>
+                  ) : (
+                    <p className=" font-poppins  ">{student_num}</p>
+                  )}
                 </div>
                 <div className="w-[350px]">
                   <p className="text-[#83ACD8] font-poppins ">Email</p>
-                  <p className=" font-poppins  ">221661561</p>
+                  {editing ? (
+                    <input
+                      value={`${email}`}
+                      onChange={handleChangeEmail}
+                      className="mt-1 
+                pl-2 font-poppins text-[#434343] rounded-md
+                placeholder:pl-2 focus:outline-none
+              w-[250px] h-[35px] border-2 border-[#83ACD8]"
+                      type="text"
+                    ></input>
+                  ) : (
+                    <p className=" font-poppins  ">{email}</p>
+                  )}
                 </div>
               </div>
               <div className="mt-6 flex gap-5">
                 <div className="w-[350px]">
                   <p className="text-[#83ACD8] font-poppins ">Join Date</p>
-                  <p className=" font-poppins  ">221661561</p>
+                  <p className=" font-poppins  ">
+                    {usr.createdAt.getDate()}/{usr.createdAt.getMonth() + 1}/
+                    {usr.createdAt.getFullYear()}
+                  </p>
                 </div>
               </div>
 
-              <div className="mt-10  w-[80%] flex justify-end ">
-                <button className="bg-[#586ced] self-end p-2 w-[100px] rounded-md font-poppins text-white">
-                  Update
-                </button>
+              <div className="mt-5  w-[80%] flex justify-end ">
+                {editing && (
+                  <button
+                    onClick={() => {
+                      setEditing(false);
+                    }}
+                    className="bg-[#586ced] self-end p-2 w-[100px] rounded-md font-poppins text-white"
+                  >
+                    Update
+                  </button>
+                )}
               </div>
             </div>
           </div>
