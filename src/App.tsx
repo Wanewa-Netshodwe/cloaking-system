@@ -6,6 +6,8 @@ import Dashboard from "./pages/Dashboard";
 import Layout from "./layout/Layout";
 import RegistrationForm from "./pages/Register";
 import SignInPage from "./pages/SIgnInPage";
+import MyAccount from "./pages/MyAccount";
+import AttendanceReport from "./pages/AttendanceReport";
 
 function App() {
   return (
@@ -16,6 +18,11 @@ function App() {
 
         <Route element={<Layout />}>
           <Route path="/Dashboard" element={<Dashboard />}></Route>
+          <Route
+            path="/AttendanceReport"
+            element={<AttendanceReport />}
+          ></Route>
+          <Route path="/MyAccount" element={<MyAccount />}></Route>
         </Route>
       </Routes>
     </BrowserRouter>

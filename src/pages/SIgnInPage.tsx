@@ -55,7 +55,10 @@ const SignInPage = () => {
             </a>
           </p>
 
-          <button className=" mt-5 hover:bg-[#2b81ba] font-poppins text-white bg-[#1D9BF0] w-[565px] p-2  rounded-md ">
+          <button
+            onClick={handleSubmit}
+            className=" mt-5 hover:bg-[#2b81ba] font-poppins text-white bg-[#1D9BF0] w-[565px] p-2  rounded-md "
+          >
             Login
           </button>
           <p className="mt-5 text-center mr-24 text-[#5A91CB] text-poppins font-semibold ">

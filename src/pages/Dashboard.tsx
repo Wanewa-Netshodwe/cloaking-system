@@ -49,10 +49,8 @@ export default function Dashboard({}: Props) {
   type Value = ValuePiece | [ValuePiece, ValuePiece];
   const [value2, onChange] = useState<Value>(new Date());
   return (
-    <div className="w-[100vw] h-[100vh] flex  bg-[#F3F8FB] border-2=">
-      <div className="border-2 w-[250px] border-orange-400">
-        <SideMenuBar />
-      </div>
+    <div className="w-[100vw] h-[120%] flex  bg-[#F3F8FB] border-2">
+      <SideMenuBar current="Dashboard" />
 
       <div className="border-2 p-5 w-full flex-2 ">
         <div className="flex justify-between w-[95%]">
