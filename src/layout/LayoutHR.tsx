@@ -5,16 +5,13 @@ import SideMenuBar from "../components/SideMenuBar";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import ClockoutModal from "../components/ClockoutModal";
+import HeaderHR from "../components/HeaderHR";
 type Props = {};
 
-export default function Layout({}: Props) {
-  const show_modal = useSelector(
-    (state: RootState) => state.app.clock_out_modal_open
-  );
+export default function LayoutHR({}: Props) {
   return (
     <div className=" min-w-[100vw]">
-      {show_modal && <ClockoutModal />}
-      <Header />
+      <HeaderHR />
       <Outlet />
     </div>
   );

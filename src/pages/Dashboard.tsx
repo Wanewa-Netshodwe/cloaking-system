@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import SideMenuBar from "../components/SideMenuBar";
 import GraphItem from "../components/GraphItem";
 import Clock from "react-clock";
-import { faRightToBracket } from "@fortawesome/free-solid-svg-icons";
-import { useSelector } from "react-redux";
+import {
+  faRightToBracket,
+  faRightFromBracket,
+} from "@fortawesome/free-solid-svg-icons";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import GraphItemHours from "../components/GraphItemHours";
 import Annoucements from "../components/Annoucements";
@@ -12,14 +15,48 @@ import "react-day-picker/style.css";
 import "../components/clock.css";
 import AnimatedNumbers from "react-animated-numbers";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
+import "reactjs-popup/dist/index.css";
+import Popup from "reactjs-popup";
+import { setAppDetails } from "../redux/appSlice";
+import { tr } from "@faker-js/faker/.";
+import { increment, startTimer } from "../redux/timerSlice";
+import { setClockin } from "../redux/UserSlice";
+import SideMenuBarHR from "../components/SideMenuBarHR";
 type Props = {};
 
 export default function Dashboard({}: Props) {
+  const dispatch = useDispatch();
+  const { time, running } = useSelector((state: RootState) => state.timer);
+  useEffect(() => {
+    let interval: NodeJS.Timer;
+    if (running) {
+      interval = setInterval(() => {
+        dispatch(increment()); // Increments time every second
+      }, 1000);
+    } else {
+      //@ts-ignore
+      clearInterval(interval);
+    }
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, [running, dispatch]);
+
   const defaultClassNames = getDefaultClassNames();
   const submitDatabase = () => {};
   const [value, setValue] = useState(new Date());
- 
+  const handelBtnPress = () => {
+    if (clocked_in) {
+      dispatch(setAppDetails(true));
+    } else {
+      dispatch(startTimer());
+      dispatch(setClockin(true));
+    }
+  };
+  const isopen = useSelector(
+    (state: RootState) => state.app.clock_out_modal_open
+  );
+  // const clocked_in = useSelector((state: RootState) => state.user.clocked_in);
+  const clocked_in = useSelector((state: RootState) => state.user.clocked_in);
 
   useEffect(() => {
     const interval = setInterval(() => setValue(new Date()), 1000);
@@ -41,16 +78,23 @@ export default function Dashboard({}: Props) {
       minute: "#ffffff",
       hour: "#ffffff",
     },
-    seconds: 1, // set your
-    minutes: 10, // own
-    hours: 22, // time here.
+    seconds: 1,
+    minutes: 10,
+    hours: 22,
   };
   type ValuePiece = Date | null;
 
   type Value = ValuePiece | [ValuePiece, ValuePiece];
   const [value2, onChange] = useState<Value>(new Date());
+  const hours = Math.floor(time / 3600);
+  const minutes = Math.floor((time % 3600) / 60);
+  const seconds = time % 60;
   return (
-    <div className="w-[100vw] h-[120%] flex  bg-[#F3F8FB] border-2">
+    <div
+      className={`w-[100vw] ${
+        isopen && "blur-sm"
+      } z-10 h-[120%] flex  bg-[#F3F8FB]  border-2`}
+    >
       <SideMenuBar current="Dashboard" />
 
       <div className="border-2 p-5 w-full flex-2 ">
@@ -114,7 +158,7 @@ export default function Dashboard({}: Props) {
             month="February"
             hour="0"
             minutes="23"
-            seconds="55"
+            seconds="00"
             perc="35%"
             title="Total Working Hours"
           />
@@ -178,7 +222,7 @@ export default function Dashboard({}: Props) {
                       Working Hours{" "}
                     </p>
                     <p className="font-poppins  text-[#2C5B8C] text-[21px] font-semibold">
-                      0 Hr 00 Mins 00 Secs{" "}
+                      {`${hours}`} Hr {`${minutes}`} Mins {`${seconds}`} Secs
                     </p>
                   </div>
                   <div className="w-[250px] border-2 p-3 border-[#C6E6FB] h-[85px]  rounded-md">
@@ -196,7 +240,7 @@ export default function Dashboard({}: Props) {
                     <img
                       src="/pot.png"
                       alt="pot pic"
-                      className=" w-[139px] h-[139px]"
+                      className=" w-[139px] h-[139px] from-[#cc4b4b]"
                     />
                     <p className="font-poppins text-[#66B602] text-[13px] text-center font-semibold">
                       Punctuality is the virtue of the bored.
@@ -207,15 +251,21 @@ export default function Dashboard({}: Props) {
               <div className="p-2 flex gap-6 items-center mt-8">
                 <div>
                   <FontAwesomeIcon
-                    icon={faRightToBracket}
+                    icon={clocked_in ? faRightFromBracket : faRightToBracket}
                     size="2x"
-                    color="#52B623"
+                    color={`${clocked_in ? "#cc4b4b" : "#52B623"}`}
                   />
                 </div>
                 <div>
-                  <button className="font-poppins bg-gradient-to-r  from-[#52B623] via-[#66B602] to-[#94D145] rounded-md text-white p-1 w-[450px] text-[19px] font-semibold ">
-                    {" "}
-                    clock-in
+                  <button
+                    onClick={handelBtnPress}
+                    className={`font-poppins ${
+                      clocked_in
+                        ? " bg-gradient-to-r  from-[#d54d4d] via-[#b60232] to-[#d14545] "
+                        : " bg-gradient-to-r  from-[#52B623] via-[#66B602] to-[#94D145]"
+                    } rounded-md text-white p-1 w-[450px] text-[19px] font-semibold `}
+                  >
+                    {clocked_in ? "clock-out" : "clock-in"}
                   </button>
                 </div>
               </div>

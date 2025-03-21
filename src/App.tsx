@@ -9,6 +9,8 @@ import SignInPage from "./pages/SIgnInPage";
 import MyAccount from "./pages/MyAccount";
 import AttendanceReport from "./pages/AttendanceReport";
 import APItest from "./pages/APItest";
+import LayoutHR from "./layout/LayoutHR";
+import DashboardHR from "./pages/DashboardHR";
 
 function App() {
   return (
@@ -18,6 +20,9 @@ function App() {
         <Route path="sign-in" element={<SignInPage />}></Route>
         <Route path="api" element={<APItest />}></Route>
 
+        <Route element={<LayoutHR />}>
+          <Route path="/HR/Dashboard" element={<DashboardHR />}></Route>
+        </Route>
         <Route element={<Layout />}>
           <Route path="/Dashboard" element={<Dashboard />}></Route>
           <Route

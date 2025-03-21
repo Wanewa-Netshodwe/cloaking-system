@@ -82,6 +82,7 @@ const RegistrationPage = () => {
           setLoading(false);
           console.log(new Date(result.data.createdAt));
           let usr: UserState = {
+            clocked_in: false,
             profile_pic: result.data.profile_pic,
             contactNo: result.data.contactNo,
             emailAddress: result.data.emailAddress,

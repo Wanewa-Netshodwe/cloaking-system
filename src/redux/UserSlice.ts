@@ -10,9 +10,11 @@ export type UserState = {
   gender: string;
   createdAt: Date;
   profile_pic: string;
+  clocked_in: boolean;
 };
 
 const initialState: UserState = {
+  clocked_in: false,
   profile_pic: "",
   fullName: "",
   surname: "",
@@ -37,11 +39,14 @@ const userSlice = createSlice({
       state.studentNumber = action.payload.studentNumber;
       state.emailAddress = action.payload.emailAddress;
     },
+    setClockin: (state, action) => {
+      state.clocked_in = action.payload;
+    },
   },
 });
 
 // Export the actions
-export const { setUserDetails } = userSlice.actions;
+export const { setUserDetails, setClockin } = userSlice.actions;
 
 // Export the reducer to be added to the store
 export default userSlice.reducer;
