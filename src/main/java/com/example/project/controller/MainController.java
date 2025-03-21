@@ -1,14 +1,13 @@
 package com.example.project.controller;
 
-import com.example.project.models.Attendance;
-import com.example.project.models.LoginModel;
-import com.example.project.models.User;
+import com.example.project.models.*;
 import com.example.project.service.BusinessLogic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -45,23 +44,52 @@ System.out.println("Recieved a clockin request ");
     }
 
 @PostMapping("/login")
-    public ResponseEntity<User> login(@RequestBody LoginModel loginModel ) {
+    public ResponseEntity<UserLoginModel> login(@RequestBody LoginModel loginModel ) {
         System.out.println("recieved login request");
         User u = service.correctPassword(loginModel);
+        UserLoginModel userLoginModel = new UserLoginModel();
         if (u == null){
-            return (ResponseEntity) ResponseEntity.status(403);
-        }else{
-            return ResponseEntity.ok(u);
+        return (ResponseEntity) ResponseEntity.status(403);
         }
+        Attendance attendance = service.getActiveAttendance(u);
+        if(attendance == null){
+        userLoginModel.setUser(u);
+        userLoginModel.setSeconds(0L);
+        return ResponseEntity.ok(userLoginModel);
+        }
+        else{
+            userLoginModel.setUser(u);
+            if(attendance.getClock_in() == null){
+                userLoginModel.setSeconds(0L);
+                userLoginModel.setClockin(false);
+                return ResponseEntity.ok(userLoginModel);
+            }
+            Long seconds =Duration.between(attendance.getClock_in().toInstant(),new Date().toInstant()).getSeconds();
+            if(attendance.getClock_out() == null){
+                userLoginModel.setSeconds(seconds);
+                userLoginModel.setClockin(true);
+            }else {
+                Long sec =Duration.between(attendance.getClock_in().toInstant(),attendance.getClock_out().toInstant()).getSeconds();
+                userLoginModel.setSeconds(sec);
+                userLoginModel.setClockin(false);
+            }
+
+
+            return ResponseEntity.ok(userLoginModel);
+        }
+    }
+
+    @PostMapping("/attendance")
+    public ResponseEntity<List<AttendanceDataModel>> attendanceData(@RequestBody User user ) {
+        System.out.println("recieved attendance request");
+       return  ResponseEntity.ok(service.getAttendanceData(user));
     }
 
     @GetMapping("/report")
     public ResponseEntity<HashMap<String, List<Attendance>>> makeReport(@RequestBody User user, @RequestHeader("role") String role) {
-
         if (!role.equals("HR")) {
             return ResponseEntity.status(403).body(null);
         }
-
         HashMap<String, List<Attendance>> map = service.getReports();
         return ResponseEntity.ok(map);
     }

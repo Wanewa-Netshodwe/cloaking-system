@@ -4,6 +4,11 @@ public class LoginModel {
     private String studentNum;
     private String password;
 
+    public LoginModel(String studentNum, String password) {
+        this.studentNum = studentNum;
+        this.password = password;
+    }
+
     public String getStudentNum() {
         return studentNum;
     }

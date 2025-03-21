@@ -1,9 +1,6 @@
 package com.example.project.service;
 
-import com.example.project.models.Attendance;
-import com.example.project.models.LoginModel;
-import com.example.project.models.TimeWorked;
-import com.example.project.models.User;
+import com.example.project.models.*;
 import com.example.project.repos.AttendanceRepository;
 import com.example.project.repos.TimeWorkedRepository;
 import com.example.project.repos.UserRepository;
@@ -38,6 +35,42 @@ public class BusinessLogic {
         }else{
             return  null;
         }
+    }
+
+    public List<AttendanceDataModel> getAttendanceData(User user){
+        User u = correctPassword(new LoginModel(user.getStudentNumber(), user.getPassword()));
+        List<Attendance> attendanceList = attendanceRepository.findAllByUser_id(u.getId());
+        List<AttendanceDataModel> attendanceDataModels = new ArrayList<>();
+        if(!attendanceList.isEmpty()){
+            System.out.println("found attendance");
+            System.out.println(attendanceList);
+            for(Attendance attendance : attendanceList){
+                System.out.println("Create At : "+ attendance.getTodayDate());
+                AttendanceDataModel dataModel = new AttendanceDataModel();
+                dataModel.setValid(true);
+                dataModel.setClock_in(attendance.getClock_in());
+                if(attendance.getClock_out() == null){
+                    dataModel.setClock_out(null);
+                }else{
+                    dataModel.setClock_out(attendance.getClock_out());
+                }
+                dataModel.setTodayDate(attendance.getTodayDate());
+                TimeWorkedModel timeWorkedModel = new TimeWorkedModel();
+                timeWorkedModel.setHours(attendance.getWorkHours().getHours());
+                timeWorkedModel.setMinutes(attendance.getWorkHours().getMinutes());
+                timeWorkedModel.setSeconds(attendance.getWorkHours().getSeconds());
+                dataModel.setTimeWorkedModel(timeWorkedModel);
+                attendanceDataModels.add(dataModel);
+            }
+        }
+        return attendanceDataModels;
+    }
+    public Attendance getActiveAttendance(User usr){
+        var attendance =  attendanceRepository.findByUserIdAndToday(usr.getId());
+        if(attendance.isPresent()){
+            return attendance.get();
+        }
+        return null;
     }
     public HashMap<String, List<Attendance>> getReports() {
         List<User> users = userRepository.findAll();
