@@ -4,7 +4,7 @@ const timerSlice = createSlice({
   name: "timer",
   initialState: {
     time: 0,
-    running: false, // Track whether the timer is running
+    running: false,
   },
   reducers: {
     increment: (state) => {

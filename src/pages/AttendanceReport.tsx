@@ -8,7 +8,7 @@ import {
   faFileExport,
   faRightLeft,
 } from "@fortawesome/free-solid-svg-icons";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import GraphItemHours from "../components/GraphItemHours";
 import Annoucements from "../components/Annoucements";
@@ -17,20 +17,67 @@ import "react-day-picker/style.css";
 import "../components/clock.css";
 import AnimatedNumbers from "react-animated-numbers";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { UserState } from "../redux/UserSlice";
+import axios from "axios";
+import { data } from "react-router-dom";
+import { AttendanceData, setAttendanceData } from "../redux/AttendanceSlice";
 
 type Props = {};
 
 export default function AttendanceReport({}: Props) {
+  const dispatch = useDispatch();
   const defaultClassNames = getDefaultClassNames();
   const submitDatabase = () => {};
   const [value, setValue] = useState(new Date());
-
+  const attendance_data = useSelector(
+    (state: RootState) => state.attendance_data.my_attendance_data
+  );
+  const user = useSelector((state: RootState) => state.user);
+  const get_data = async (obj: {
+    fullName: string;
+    surname: string;
+    contactNo: string;
+    emailAddress: string;
+    studentNumber: string;
+    gender: string;
+    password: string;
+  }) => {
+    try {
+      const result = await axios.post(
+        "http://localhost:8092/api/attendance",
+        obj
+      );
+      if (result.status === 200) {
+        let attendance_data_array: AttendanceData[] = [];
+        result.data.map((data: any) => {
+          attendance_data_array.push({
+            clock_in: data.clock_in,
+            clock_out: data.clock_out,
+            todayDate: data.todayDate,
+            valid: data.valid,
+            workHours: data.timeWorkedModel,
+          });
+        });
+        dispatch(setAttendanceData(attendance_data_array));
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
   useEffect(() => {
-    const interval = setInterval(() => setValue(new Date()), 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
+    if (attendance_data[0].valid) {
+    } else {
+      let obj = {
+        fullName: user.fullName,
+        surname: user.surname,
+        contactNo: user.contactNo,
+        emailAddress: user.emailAddress,
+        studentNumber: user.studentNumber,
+        gender: user.gender,
+        password: user.password,
+      };
+      get_data(obj);
+    }
   }, []);
   let options = {
     useCustomTime: false,

@@ -2,11 +2,13 @@ import { configureStore } from "@reduxjs/toolkit";
 import userSlice from "./UserSlice";
 import appSlice from "./appSlice";
 import timerSlice from "./timerSlice";
+import attendanceSlice from "./AttendanceSlice";
 export const store = configureStore({
   reducer: {
     user: userSlice,
     app: appSlice,
     timer: timerSlice,
+    attendance_data:attendanceSlice
   },
 });
 // Infer the `RootState` and `AppDispatch` types from the store itself

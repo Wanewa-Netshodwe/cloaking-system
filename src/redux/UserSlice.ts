@@ -14,6 +14,20 @@ export type UserState = {
   clocked_in: boolean;
 };
 
+type workHours = {
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
+
+type AttendanceData = {
+  clock_in: Date;
+  clock_out: Date;
+  todayDate: Date;
+  workHours: workHours;
+};
+
+
 const initialState: UserState = {
   id: 0,
   clocked_in: false,
@@ -26,6 +40,7 @@ const initialState: UserState = {
   studentNumber: "",
   gender: "",
   createdAt: new Date(),
+  
 };
 
 const userSlice = createSlice({
