@@ -13,6 +13,12 @@ import java.util.Optional;
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     @Query("SELECT a FROM Attendance a WHERE a.user_id.id = :userId")
     Optional<Attendance> findByUserId(@Param("userId") Long userId);
+    @Query("SELECT a FROM Attendance a WHERE a.user_id.id = :userId AND CAST(a.todayDate AS DATE) = CURRENT_DATE")
+    Optional<Attendance> findByUserIdAndToday(@Param("userId") Long userId);
+
+
+
+
 
 }
 

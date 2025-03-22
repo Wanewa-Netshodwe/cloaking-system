@@ -1,6 +1,7 @@
 package com.example.project.controller;
 
 import com.example.project.models.Attendance;
+import com.example.project.models.LoginModel;
 import com.example.project.models.User;
 import com.example.project.service.BusinessLogic;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,12 +30,12 @@ public class MainController {
         return ResponseEntity.status(HttpStatus.CREATED).body(u);
     }
 
-  @GetMapping("/clockin")
-    public void clockIn(@RequestBody User user){
-
-        service.clockIn(user);
+  @PostMapping ("/clockin")
+    public ResponseEntity<String> clockIn(@RequestBody User user){
+System.out.println("Recieved a clockin request ");
+        return  service.clockIn(user);
     }
-    @GetMapping("/clockout")
+    @PostMapping("/clockout")
     public void clockOut(@RequestBody User user){
         service.clockout(user);
     }
@@ -44,23 +45,20 @@ public class MainController {
     }
 
 @PostMapping("/login")
-    public ResponseEntity login(@RequestBody User user ) {
-        User u = service.correctPassword(user);
+    public ResponseEntity<User> login(@RequestBody LoginModel loginModel ) {
+        System.out.println("recieved login request");
+        User u = service.correctPassword(loginModel);
         if (u == null){
             return (ResponseEntity) ResponseEntity.status(403);
         }else{
-            return ResponseEntity.ok(user);
+            return ResponseEntity.ok(u);
         }
     }
 
     @GetMapping("/report")
-    public ResponseEntity<HashMap<String, List<Attendance>>> makeReport(@RequestBody User user) {
-        User u = service.correctPassword(user);
-        System.out.println(u.getFullName());
-        if (u == null){
-            return ResponseEntity.status(403).body(null);
-        }
-        if (!u.getRole().equals("HR")) {
+    public ResponseEntity<HashMap<String, List<Attendance>>> makeReport(@RequestBody User user, @RequestHeader("role") String role) {
+
+        if (!role.equals("HR")) {
             return ResponseEntity.status(403).body(null);
         }
 

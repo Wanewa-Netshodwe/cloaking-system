@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 
 @Entity
 public class TimeWorked {
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user_id;
     private Long hours;
