@@ -9,23 +9,21 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import GraphItemHours from "../components/GraphItemHours";
-import Annoucements from "../components/Annoucements";
 import { DayPicker, getDefaultClassNames } from "react-day-picker";
 import "react-day-picker/style.css";
 import "../components/clock.css";
 import AnimatedNumbers from "react-animated-numbers";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "reactjs-popup/dist/index.css";
-import Popup from "reactjs-popup";
 import { setAppDetails } from "../redux/appSlice";
-import { tr } from "@faker-js/faker/.";
 import { increment, startTimer } from "../redux/timerSlice";
 import { setClockin } from "../redux/UserSlice";
-import SideMenuBarHR from "../components/SideMenuBarHR";
+import axios from "axios";
 type Props = {};
 
 export default function Dashboard({}: Props) {
   const dispatch = useDispatch();
+  const usr = useSelector((state: RootState) => state.user);
   const { time, running } = useSelector((state: RootState) => state.timer);
   useEffect(() => {
     let interval: NodeJS.Timer;
@@ -44,18 +42,49 @@ export default function Dashboard({}: Props) {
   const defaultClassNames = getDefaultClassNames();
   const submitDatabase = () => {};
   const [value, setValue] = useState(new Date());
-  const handelBtnPress = () => {
+  const [blocked, setBlocked] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setBlocked(false);
+    }, 6000);
+  }, [blocked]);
+  const handelBtnPress = async () => {
     if (clocked_in) {
+      try {
+        const result = await axios.post(
+          "http://localhost:8092/api/clockout",
+          usr
+        );
+        console.log(result.status);
+      } catch (err) {
+        console.log(err);
+      }
       dispatch(setAppDetails(true));
     } else {
-      dispatch(startTimer());
-      dispatch(setClockin(true));
+      try {
+        const result = await axios.post(
+          "http://localhost:8092/api/clockin",
+          usr
+        );
+        console.log(result.status);
+        if (blocked) {
+        } else {
+          dispatch(startTimer());
+          dispatch(setClockin(true));
+        }
+      } catch (err) {
+        if (axios.isAxiosError(err))
+          if (err.response?.status === 403) {
+            setBlocked(true);
+          }
+      }
     }
   };
   const isopen = useSelector(
     (state: RootState) => state.app.clock_out_modal_open
   );
-  // const clocked_in = useSelector((state: RootState) => state.user.clocked_in);
+
   const clocked_in = useSelector((state: RootState) => state.user.clocked_in);
 
   useEffect(() => {
@@ -268,6 +297,13 @@ export default function Dashboard({}: Props) {
                     {clocked_in ? "clock-out" : "clock-in"}
                   </button>
                 </div>
+              </div>
+              <div className="mt-2">
+                {blocked && (
+                  <p className="font-poppins font-semibold text-[14px] text-[#d54d4d]">
+                    already clocked_in for today try tommorow
+                  </p>
+                )}
               </div>
             </div>
           </div>

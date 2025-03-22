@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setAppDetails } from "../redux/appSlice";
 import { RootState } from "../redux/store";
 import { increment, startTimer, stopTimer } from "../redux/timerSlice";
+import { setClockin } from "../redux/UserSlice";
 
 type Props = {};
 
@@ -16,6 +17,7 @@ export default function ClockoutModal({}: Props) {
   const handleYes = () => {
     dispatch(setAppDetails(false));
     dispatch(stopTimer());
+    dispatch(setClockin(false));
   };
   return (
     <div className="border-[#cce9ff] p-5 items-center  border-2 bg-white top-[300px] rounded-md left-[500px] absolute w-[450px] z-20 h-[250px]">

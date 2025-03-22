@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 export type UserState = {
+  id: number;
   fullName: string;
   surname: string;
   password: string;
@@ -14,6 +15,7 @@ export type UserState = {
 };
 
 const initialState: UserState = {
+  id: 0,
   clocked_in: false,
   profile_pic: "",
   fullName: "",

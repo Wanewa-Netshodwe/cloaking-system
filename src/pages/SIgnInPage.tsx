@@ -1,12 +1,47 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { setUserDetails, UserState } from "../redux/UserSlice";
+import { useDispatch } from "react-redux";
 const SignInPage = () => {
+  const dispatch = useDispatch();
+  const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const [student_num, setStudentNum] = useState("");
+  const handleChangePassword = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(event.target.value);
+  };
+  const handleChangeStudentNumber = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setStudentNum(event.target.value);
+  };
+  const handleSubmit = async () => {
+    let obj = {
+      studentNum: student_num,
+      password: password,
+    };
+    const result = await axios.post("http://localhost:8092/api/login", obj);
+    if (result.status === 200) {
+      console.log(new Date(result.data.createdAt));
+      let usr: UserState = {
+        id: result.data.id,
+        clocked_in: false,
+        profile_pic: result.data.profile_pic,
+        contactNo: result.data.contactNo,
+        emailAddress: result.data.emailAddress,
+        fullName: result.data.fullName,
+        gender: result.data.gender,
+        password: result.data.password,
+        studentNumber: result.data.studentNumber,
+        surname: result.data.surname,
+        createdAt: new Date(result.data.createdAt),
+      };
+      console.log(result);
+      dispatch(setUserDetails(usr));
+      nav("/Dashboard");
+    }
   };
 
   return (
@@ -27,6 +62,7 @@ const SignInPage = () => {
                 Student Number
               </p>
               <input
+                onChange={handleChangeStudentNumber}
                 placeholder="First Name "
                 className="mt-1 placeholder:text-[#83ACD8] placeholder:font-poppins
                 pl-2 font-poppins text-[#83ACD8] rounded-md
@@ -40,6 +76,7 @@ const SignInPage = () => {
             <div className="mt-5 ">
               <p className="font-poppins font-semibold text-[15px]">Password</p>
               <input
+                onChange={handleChangePassword}
                 placeholder="First Name "
                 className="mt-1 placeholder:text-[#83ACD8] placeholder:font-poppins
                 pl-2 font-poppins text-[#83ACD8]

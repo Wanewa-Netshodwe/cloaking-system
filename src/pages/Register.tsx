@@ -82,13 +82,14 @@ const RegistrationPage = () => {
           setLoading(false);
           console.log(new Date(result.data.createdAt));
           let usr: UserState = {
+            id: result.data.id,
             clocked_in: false,
             profile_pic: result.data.profile_pic,
             contactNo: result.data.contactNo,
             emailAddress: result.data.emailAddress,
             fullName: result.data.fullName,
             gender: result.data.gender,
-            password: "",
+            password: result.data.password,
             studentNumber: result.data.studentNumber,
             surname: result.data.surname,
             createdAt: new Date(result.data.createdAt),
