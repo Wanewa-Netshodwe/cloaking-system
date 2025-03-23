@@ -11,6 +11,7 @@ import AttendanceReport from "./pages/AttendanceReport";
 import APItest from "./pages/APItest";
 import LayoutHR from "./layout/LayoutHR";
 import DashboardHR from "./pages/DashboardHR";
+import UserAccount from "./pages/UserAccount";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
 
         <Route element={<LayoutHR />}>
           <Route path="/HR/Dashboard" element={<DashboardHR />}></Route>
+          <Route path="/HR/student" element={<UserAccount />}></Route>
         </Route>
         <Route element={<Layout />}>
           <Route path="/Dashboard" element={<Dashboard />}></Route>

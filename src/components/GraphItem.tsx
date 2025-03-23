@@ -17,7 +17,6 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 
-// ✅ Register required components for an area chart
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -91,7 +90,7 @@ export default function GraphItem({
     responsive: false,
     maintainAspectRatio: false,
     plugins: {
-      tooltip: { enabled: false }, // ✅ Disable tooltip
+      tooltip: { enabled: false },
       legend: { display: false }, // ✅ Remove legend (if needed)
     },
     scales: {

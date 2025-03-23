@@ -12,9 +12,11 @@ import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { UserAttendance } from "../redux/AttendanceSlice";
 import { calculateChangeHR, DataChange, isOnTime } from "../utils/Analytics";
+import { Link, useNavigate } from "react-router-dom";
 type Props = {};
 
 export default function DashboardHR({}: Props) {
+  const navigate = useNavigate();
   const data = [
     {
       name: "Wanewa Blessing Netshodwe",
@@ -93,6 +95,7 @@ export default function DashboardHR({}: Props) {
   }, 3000);
 
   console.log(yesterday_rec);
+
   return (
     <div>
       {loading ? (
@@ -344,22 +347,6 @@ export default function DashboardHR({}: Props) {
             </div>
 
             <WeekModal setselectedDate={setselectedDate} />
-            <div className=" mt-5 relative">
-              <input
-                placeholder="Search"
-                className="mt-1 placeholder:text-[#c8c9ca] placeholder:font-poppins
-                        pl-7 font-poppins text-[#4c4c4d] rounded-md
-                        placeholder:pl-2 focus:outline-none
-                      w-[250px] h-[40px] border-2 border-[#dadbdd]"
-                type="text"
-              ></input>
-              <FontAwesomeIcon
-                className="relative  right-60"
-                size="1x"
-                color="#4c4c4d"
-                icon={faSearch}
-              />
-            </div>
 
             <table cellPadding="10" cellSpacing={"50"} className="mt-8 ">
               <thead className="p-1">
@@ -368,22 +355,35 @@ export default function DashboardHR({}: Props) {
                     Employee Name
                   </p>
                 </th>
-                <th className="w-[450px]">
+                <th className="w-[420px]">
                   <p className=" text-start font-poppins font-semibold">
                     clock-in && clock-out
                   </p>
                 </th>
-                <th className="w-[430px]">
+                <th className="w-[300px]">
                   <p className=" text-start font-poppins font-semibold">
                     Email Address
                   </p>
+                </th>
+                <th className="w-[200px]">
+                  <p className=" text-start font-poppins font-semibold">Role</p>
                 </th>
               </thead>
               <tbody>
                 {yesterday_rec.length > 0 ? (
                   yesterday_rec.map((val) => {
                     return (
-                      <tr className="  rounded-lg ">
+                      <tr
+                        onClick={() =>
+                          navigate("/HR/student", {
+                            state: {
+                              fullname: `${val.user_id.fullName} ${val.user_id.surname}`,
+                              data_map: all_attendance,
+                            },
+                          })
+                        }
+                        className=" hover:cursor-pointer rounded-lg "
+                      >
                         <td>
                           <div className=" gap-3 flex w-[180px] items-center right-0">
                             <img
@@ -454,11 +454,19 @@ export default function DashboardHR({}: Props) {
                             {val.user_id.emailAddress}
                           </p>
                         </td>
+                        <td>
+                          <p className="font-poppins font-semibold text-[14px]">
+                            {val.user_id.job}
+                          </p>
+                        </td>
                       </tr>
                     );
                   })
                 ) : (
-                  <p> No data found </p>
+                  <p className="font-poppins font-semibold text-[16px]">
+                    {" "}
+                    No data found{" "}
+                  </p>
                 )}
               </tbody>
             </table>

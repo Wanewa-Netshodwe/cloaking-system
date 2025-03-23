@@ -103,7 +103,7 @@ const calculateMetrics = (data: AttendanceData[]) => {
   console.log("calculateMetrics - Results:", {
     ontime_perc,
     late_perc,
-    total_records: data.length
+    total_records: data.length,
   });
 
   return {
@@ -157,7 +157,7 @@ const calculateMetricsDaily = (data: AttendanceData) => {
 
   console.log("calculateMetricsDaily - Results:", {
     ontime_perc,
-    late_perc
+    late_perc,
   });
 
   return {
@@ -221,13 +221,15 @@ const getDataForDay = (
   console.log(`getDataForDay - Looking for key: ${key}`);
   console.log(`Available keys: ${[...attendance_data_map.keys()]}`);
   let result = attendance_data_map.get(key);
-  
+
   if (result === undefined) {
-    console.log(`getDataForDay - No data for today, looking for next available key`);
+    console.log(
+      `getDataForDay - No data for today, looking for next available key`
+    );
     // Get all keys and sort them
     const allKeys = [...attendance_data_map].sort();
     console.log(`getDataForDay - All sorted keys: ${allKeys}`);
-    
+
     if (allKeys.length > 0) {
       // Find the first key that's available (just use the most recent one if today's not available)
       const mostRecentKey = allKeys[allKeys.length - 1];
@@ -235,7 +237,7 @@ const getDataForDay = (
       result = attendance_data_map.get(mostRecentKey[0]);
     }
   }
-  
+
   console.log(`getDataForDay - Found data: ${!!result}`);
   return result;
 };
@@ -243,18 +245,20 @@ const getDataForDay = (
 export const extractWeek = (
   attendance_data_map: Map<string, AttendanceData>
 ): AttendanceData[] => {
-  console.log('extractWeek - Start');
+  console.log("extractWeek - Start");
   const now = new Date();
   const weekAgo = new Date();
   weekAgo.setDate(now.getDate() - 7);
-  console.log(`extractWeek - Date range: ${weekAgo.toISOString()} to ${now.toISOString()}`);
-  
+  console.log(
+    `extractWeek - Date range: ${weekAgo.toISOString()} to ${now.toISOString()}`
+  );
+
   const list_attendance: AttendanceData[] = [];
   const currentDate = new Date(weekAgo);
   while (currentDate <= now) {
     const dateKey = getDailyKey(currentDate);
     console.log(`extractWeek - Checking date: ${dateKey}`);
-    
+
     const attendance = attendance_data_map.get(dateKey);
     if (attendance !== undefined) {
       console.log(`extractWeek - Found data for ${dateKey}`);
@@ -264,7 +268,7 @@ export const extractWeek = (
     }
     currentDate.setDate(currentDate.getDate() + 1);
   }
-  
+
   console.log(`extractWeek - Total records found: ${list_attendance.length}`);
   return list_attendance;
 };
@@ -280,16 +284,22 @@ export const calculateDashBoardAnalyticMonthly = (
 
   const current_month_data = getDataForMonth(attendance_data_map, now);
   console.log("Current month data exists:", !!current_month_data);
-  console.log("Current month data length:", current_month_data ? current_month_data.length : 0);
-  
+  console.log(
+    "Current month data length:",
+    current_month_data ? current_month_data.length : 0
+  );
+
   if (current_month_data) {
     const compareMonth_data = getDataForMonth(attendance_data_map, compareDate);
     console.log("Compare month data exists:", !!compareMonth_data);
-    console.log("Compare month data length:", compareMonth_data ? compareMonth_data.length : 0);
-    
+    console.log(
+      "Compare month data length:",
+      compareMonth_data ? compareMonth_data.length : 0
+    );
+
     const current_metrics = calculateMetrics(current_month_data);
     console.log("Current metrics calculated:", current_metrics);
-    
+
     if (compareMonth_data) {
       if (compareMonth_data?.length < 1) {
         console.log("Returning only current metrics - compare data length < 1");
@@ -297,7 +307,7 @@ export const calculateDashBoardAnalyticMonthly = (
       } else {
         console.log("Calculating comparison metrics");
         const compare_metrics = calculateMetrics(compareMonth_data);
-        
+
         const currentTotalMinutes =
           current_metrics.working_hours.hours * 60 +
           current_metrics.working_hours.minutes +
@@ -319,7 +329,7 @@ export const calculateDashBoardAnalyticMonthly = (
             compare_metrics.working_hours.hours +
             current_metrics.working_hours.hours,
         };
-        
+
         console.log("Returning metrics with comparison");
         return {
           current: current_metrics,
@@ -358,35 +368,35 @@ export const calculateDashBoardAnalyticMonthly = (
 export const calculateDashBoardAnalyticDaily = (
   my_attendance_data_daily: Map<string, AttendanceData>
 ): Analytics | AnalyticsWithComparison | undefined => {
-  console.log('calculateDashBoardAnalyticDaily - Start');
-  console.log('Input data map size:', my_attendance_data_daily.size);
-  console.log('Input data keys:', my_attendance_data_daily);
-  
+  console.log("calculateDashBoardAnalyticDaily - Start");
+  console.log("Input data map size:", my_attendance_data_daily.size);
+  console.log("Input data keys:", my_attendance_data_daily);
+
   const now = new Date();
-  console.log('Current date:', now);
-  console.log('Current date key:', getDailyKey(now));
-  
+  console.log("Current date:", now);
+  console.log("Current date key:", getDailyKey(now));
+
   const compareDaily_data = extractWeek(my_attendance_data_daily);
-  console.log('Extracted week data length:', compareDaily_data.length);
-  
+  console.log("Extracted week data length:", compareDaily_data.length);
+
   const current_day_data = getDataForDay(my_attendance_data_daily, now);
-  console.log('Current day data exists:', !!current_day_data);
-  
+  console.log("Current day data exists:", !!current_day_data);
+
   if (current_day_data !== undefined) {
-    console.log('Processing current day data');
+    console.log("Processing current day data");
     const current_metrics = calculateMetricsDaily(current_day_data);
-    
+
     if (compareDaily_data && compareDaily_data.length > 0) {
-      console.log('Calculating comparison with week data');
+      console.log("Calculating comparison with week data");
       const compare_metrics = calculateMetrics(compareDaily_data);
-      
+
       const total_work_hours = {
         seconds: compare_metrics.working_hours.seconds,
         minutes: compare_metrics.working_hours.minutes,
         hours: compare_metrics.working_hours.hours,
       };
-      
-      console.log('Returning full comparison analytics');
+
+      console.log("Returning full comparison analytics");
       return {
         current: current_metrics,
         compare: compare_metrics,
@@ -411,17 +421,19 @@ export const calculateDashBoardAnalyticDaily = (
         },
       };
     } else {
-      console.log('UNDEFINED/PARTIAL RETURN #3: compareDaily_data is empty or undefined');
+      console.log(
+        "UNDEFINED/PARTIAL RETURN #3: compareDaily_data is empty or undefined"
+      );
       return current_metrics;
     }
   } else {
-    console.log('UNDEFINED RETURN #4: current_day_data is undefined');
+    console.log("UNDEFINED RETURN #4: current_day_data is undefined");
     return undefined;
   }
 };
 
 const calculateMetricsHR = (data: UserAttendance[]) => {
-  console.log('calculateMetricsHR - Processing data length:', data.length);
+  console.log("calculateMetricsHR - Processing data length:", data.length);
   let ontime_dataset: number[] = [];
   let late_dataset: number[] = [];
   const lunch_hours_dataset: number[] = [];
@@ -447,10 +459,10 @@ const calculateMetricsHR = (data: UserAttendance[]) => {
   const late_perc =
     data.length > 0 ? Math.round((late / data.length) * 100) : 0;
 
-  console.log('calculateMetricsHR - Results:', {
+  console.log("calculateMetricsHR - Results:", {
     ontime_perc,
     late_perc,
-    total_records: data.length
+    total_records: data.length,
   });
 
   return {
@@ -472,15 +484,15 @@ export const calculateChangeHR = (
   prev: UserAttendance[],
   current: UserAttendance[]
 ): DataChange => {
-  console.log('calculateChangeHR - Start');
-  console.log('Prev data length:', prev.length);
-  console.log('Current data length:', current.length);
-  
+  console.log("calculateChangeHR - Start");
+  console.log("Prev data length:", prev.length);
+  console.log("Current data length:", current.length);
+
   const prev_meterics = calculateMetricsHR(prev);
   const current_meterics = calculateMetricsHR(current);
-  
-  console.log('calculateChangeHR - Metrics calculated');
-  
+
+  console.log("calculateChangeHR - Metrics calculated");
+
   return {
     changes: {
       late_perc_change: calculateChange(
@@ -499,4 +511,67 @@ export const calculateChangeHR = (
     total_records_current: current_meterics.total_records,
     total_records_prev: prev_meterics.total_records,
   };
+};
+
+const weeklyData = (data: UserAttendance[]) => {
+  const last_5_days: UserAttendance[] = [];
+  const now = new Date();
+  const todayDayOfWeek = now.getDay();
+
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - (todayDayOfWeek - 1));
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const todayString = now.toISOString().split("T")[0];
+
+  if (todayDayOfWeek === 1) {
+    const todayRecord = data.find(
+      (v) => new Date(v.todayDate).toISOString().split("T")[0] === todayString
+    );
+    if (todayRecord) {
+      last_5_days.push(todayRecord);
+    }
+  } else {
+    data.forEach((v) => {
+      const recordDate = new Date(v.todayDate);
+      const recordString = recordDate.toISOString().split("T")[0];
+
+      if (
+        recordString >= startOfWeek.toISOString().split("T")[0] &&
+        recordString <= todayString
+      ) {
+        last_5_days.push(v);
+      }
+    });
+  }
+
+  return last_5_days;
+};
+
+export const onTimeData = (data: UserAttendance[]) => {
+  let last_5_days_array = weeklyData(data);
+
+  let lateData: number[] = [];
+  let earlyData: number[] = [];
+
+  if (last_5_days_array.length > 0) {
+    for (let i = 0; i < last_5_days_array.length; i++) {
+      const record = last_5_days_array[i];
+      const clockInTime = new Date(record.clock_in);
+      const officialTime = new Date(clockInTime);
+      officialTime.setHours(8, 10, 0, 0);
+
+      let difference = Math.floor(
+        (clockInTime.getTime() - officialTime.getTime()) / 60000
+      );
+
+      if (difference > 0) {
+        lateData.push(difference);
+      } else if (difference < 0) {
+        earlyData.push(difference);
+      }
+    }
+  }
+
+  return { lateData, earlyData };
 };

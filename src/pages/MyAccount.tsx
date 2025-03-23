@@ -137,6 +137,10 @@ export default function MyAccount({}: Props) {
                 <p className="absolute -bottom-20 font-poppins  text-center text-[#7e7e7e] text-[18px] font-semibold w-[580px]">
                   {usr.fullName} {usr.surname}
                 </p>
+                
+                <p className="absolute -bottom-[110px] font-poppins  text-center text-[#8e7e7e] text-[15px] font-semibold w-[580px]">
+                  {usr.job}
+                </p>
               </div>
             </div>
             <div className="  h-[600px]  p-44 pl-48">
