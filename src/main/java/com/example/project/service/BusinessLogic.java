@@ -4,9 +4,12 @@ import com.example.project.models.*;
 import com.example.project.repos.AttendanceRepository;
 import com.example.project.repos.TimeWorkedRepository;
 import com.example.project.repos.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -23,8 +26,35 @@ public class BusinessLogic {
     @Autowired
     private TimeWorkedRepository timeWorkRepository;
 
-    public void saveUser(User user) {
-        userRepository.save(user);
+    @Transactional
+    public User saveUser(User user) {
+        System.out.println(user.getFullName());
+        try {
+            return userRepository.save(user);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            // Check if the user has a valid ID
+            if (user.getId() == null) {
+                // This is a new user, so we can just save it
+                user.setVersion(null); // Reset version if it exists
+                return userRepository.save(user);
+            }
+
+            // Try to find the latest version of the user
+            Optional<User> freshUserOpt = userRepository.findById(user.getId());
+
+            if (freshUserOpt.isPresent()) {
+                User freshUser = freshUserOpt.get();
+                // Transfer updated fields from user to freshUser
+                // Example: freshUser.setName(user.getName());
+                // Add all relevant field transfers here
+
+                return userRepository.save(freshUser);
+            } else {
+                // User doesn't exist anymore, handle this case
+                // You could create a new user, throw a custom exception, or handle it differently
+                throw new EntityNotFoundException("User with ID " + user.getId() + " no longer exists");
+            }
+        }
     }
 
     public User correctPassword(LoginModel login ){
@@ -118,13 +148,17 @@ public class BusinessLogic {
 
         attendanceRepository.save(attendance1);
     }
+    public List<Attendance> getAllAttendance(){
+        return attendanceRepository.findAll();
+    }
 
-    public ResponseEntity<String> clockIn(User user) {
+    public ResponseEntity<Boolean> clockIn(User user) {
 
         Optional<User> usr = userRepository.findByStudentNumberAndPassword(user.getStudentNumber(), user.getPassword());
 
         if(usr.isPresent()){
             User existingUser = usr.get();
+
             Optional<Attendance> attendance = attendanceRepository.findByUserIdAndToday(existingUser.getId());
             if (attendance.isPresent()) {
                 if(Duration.between(attendance.get().getTodayDate().toInstant(),new Date().toInstant()).toHours() <=12){
@@ -133,18 +167,21 @@ public class BusinessLogic {
                 }else{
                     System.out.println("A Day is has creating a  new one ");
                     createSaveAttendance(existingUser);
-                    return ResponseEntity.ok("Clock-in successful for user: " + existingUser.getFullName());
+                    return ResponseEntity.ok(false);
                 }
             }else{
                 System.out.println("no attendance found creating one  ");
                 createSaveAttendance(existingUser);
-                return ResponseEntity.ok("Clock-in successful for user: " + existingUser.getFullName());
+                return ResponseEntity.ok(false);
             }
+
+
+
         }
         else {
             System.out.println("cound find student  ");
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("User not found");
+                    .body(true);
 
         }
 
@@ -153,7 +190,10 @@ public class BusinessLogic {
         Optional<User> u = userRepository.findByStudentNumberAndPassword(user.getStudentNumber(),user.getPassword());
         if (u.isPresent()) {
             User existingUser = u.get();
-
+            if(existingUser.isNew_account()){
+                existingUser.setNew_account(false);
+                userRepository.save(existingUser);
+            }
             Date now = new Date();
             Optional<Attendance> attendance = attendanceRepository.findByUserIdAndToday(existingUser.getId());
 

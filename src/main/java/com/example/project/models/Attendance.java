@@ -16,6 +16,7 @@ public class Attendance {
     private Date clock_in;
     private Date clock_out;
     private Date todayDate;
+
     @OneToOne
     @JoinColumn(name = "work_hours_id")
     private TimeWorked workHours;

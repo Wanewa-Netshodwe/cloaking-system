@@ -1,9 +1,6 @@
 package com.example.project.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.util.Date;
 
@@ -23,7 +20,64 @@ public class User {
     private String studentNumber;
     private String gender;
 
+    private String role;
+
+    private String surname;
+
+    private String password;
+    @Version
+    private Long version;
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    private String department;
+
+    private String job;
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getJob() {
+        return job;
+    }
+
+    public void setJob(String job) {
+        this.job = job;
+    }
+
     private String profile_pic;
+
+    private  boolean new_account;
+
+
+
+
+    public boolean isNew_account() {
+        return new_account;
+    }
+
+    public void setNew_account(boolean new_account) {
+        this.new_account = new_account;
+    }
+
+    public String getProfile_pic() {
+        return profile_pic;
+    }
+
+    public void setProfile_pic(String profile_pic) {
+        this.profile_pic = profile_pic;
+    }
 
     private Date createdAt;
 
@@ -35,12 +89,7 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    private String role;
 
-
-    private String surname;
-
-    private String password;
 
     public String getContactNo() {
         return contactNo;
