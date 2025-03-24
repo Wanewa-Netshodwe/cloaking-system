@@ -9,14 +9,15 @@ import Spinner from "../components/Spinner";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { increment } from "../redux/timerSlice";
+import axios from "axios";
+import { UserState } from "../redux/UserSlice";
 
 type Props = {};
 
 export default function MyAccount({}: Props) {
-  const user = useSelector((state: RootState) => state.user);
-  const local_item = localStorage.getItem("user");
-  const usr = local_item ? JSON.parse(local_item) : user;
+  const usr = useSelector((state: RootState) => state.user);
   const [image, setImage] = useState("");
+  const [file, setFile] = useState("");
   const dispatch = useDispatch();
   const fileInputRef = useRef(null);
   const { time, running } = useSelector((state: RootState) => state.timer);
@@ -31,7 +32,7 @@ export default function MyAccount({}: Props) {
       clearInterval(interval);
     }
 
-    return () => clearInterval(interval); // Cleanup on unmount
+    return () => clearInterval(interval);
   }, [running, dispatch]);
   const handleClick = () => {
     //@ts-ignore
@@ -43,10 +44,49 @@ export default function MyAccount({}: Props) {
     if (file) {
       let i = URL.createObjectURL(file);
       setImage(i);
+      setFile(file);
     }
   };
-  
-  
+  const submit = async () => {
+    const formData = new FormData();
+    formData.append("file", file);
+    let new_usr ={
+      createdAt:usr.createdAt,
+      id:usr.id,
+      department:usr.department,
+      password:usr.password,
+      profile_pic:usr.password,
+      job:usr.job,
+      new_account:usr.new_account,
+      emailAddress:email,
+      gender:gender,
+      fullName : first_name,
+      surname:last_name,
+      studentNumber:student_num,
+      contactNo:contact
+    } 
+    
+    formData.append(
+      "user",
+      JSON.stringify(new_usr)
+    );
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8092/api/upload",
+        formData
+      );
+
+      if (response.status === 200) {
+        console.log(response.data);
+      } else {
+        throw new Error("Upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
+    setLoading(false)
+  };
 
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -137,7 +177,7 @@ export default function MyAccount({}: Props) {
                 <p className="absolute -bottom-20 font-poppins  text-center text-[#7e7e7e] text-[18px] font-semibold w-[580px]">
                   {usr.fullName} {usr.surname}
                 </p>
-                
+
                 <p className="absolute -bottom-[110px] font-poppins  text-center text-[#8e7e7e] text-[15px] font-semibold w-[580px]">
                   {usr.job}
                 </p>
@@ -264,11 +304,13 @@ export default function MyAccount({}: Props) {
                 {editing && (
                   <button
                     onClick={() => {
+                      setLoading(true);
                       setEditing(false);
+                      submit();
                     }}
-                    className="bg-[#586ced] self-end p-2 w-[100px] rounded-md font-poppins text-white"
+                    className="bg-[#586ced]  items-center flex justify-center  gap-3 self-end p-2 w-[100px] rounded-md font-poppins text-white"
                   >
-                    Update
+                    Update {loading && <Spinner color="green" />}
                   </button>
                 )}
               </div>

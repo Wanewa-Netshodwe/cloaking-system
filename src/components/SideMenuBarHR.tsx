@@ -4,12 +4,17 @@ import {
   faCalendar,
   faChartColumn,
   faUser,
+  faDoorOpen,
 } from "@fortawesome/free-solid-svg-icons";
-import { useNavigate } from "react-router-dom";
+import { NavigateFunction, useNavigate } from "react-router-dom";
 import { RootState } from "../redux/store";
 import { useSelector } from "react-redux";
 type Props = {
   current: string;
+};
+export const log_out = (nav: NavigateFunction) => {
+  localStorage.clear();
+  nav("/");
 };
 
 export default function SideMenuBarHR({ current }: Props) {
@@ -38,10 +43,15 @@ export default function SideMenuBarHR({ current }: Props) {
           </div>
         </div>
         <div className="flex hover:cursor-pointer items-center mb-4">
-          <div className=" p-2 rounded-sm w-[180px]  flex items-center gap-3 mt-4">
-            <FontAwesomeIcon icon={faUser} size="1x" color="white" />
+          <div
+            onClick={() => {
+              log_out(nav);
+            }}
+            className=" p-2 rounded-sm w-[180px]  flex items-center gap-3 mt-4"
+          >
+            <FontAwesomeIcon icon={faDoorOpen} size="1x" color="white" />
             <p className="font-poppins font-semibold text-[14px]  text-white">
-              Students
+              Exit
             </p>
           </div>
         </div>

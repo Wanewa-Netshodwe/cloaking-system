@@ -8,6 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../redux/store";
 import { useSelector } from "react-redux";
+import { log_out } from "./SideMenuBarHR";
 type Props = {
   current: string;
 };
@@ -101,6 +102,25 @@ export default function SideMenuBar({ current }: Props) {
             } font-poppins font-semibold`}
           >
             My Account
+          </p>
+        </div>
+      </div>
+      <div
+        onClick={() => {
+          log_out(nav);
+        }}
+        className={`mt-3 hover:cursor-pointer p-2  `}
+      >
+        <div className="flex  items-center gap-3">
+          <FontAwesomeIcon
+            className={` hover:cursor-pointer  text-[#1D9BF0]  hover:text-red-500 `}
+            icon={faChartColumn}
+            size="1x"
+          />
+          <p
+            className={`text-[14px] text-[#1D9BF0] hover:text-red-500  font-poppins font-semibold`}
+          >
+            Exit
           </p>
         </div>
       </div>

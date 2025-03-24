@@ -17,7 +17,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "reactjs-popup/dist/index.css";
 import { setAppDetails } from "../redux/appSlice";
 import { increment, startTimer } from "../redux/timerSlice";
-import { setClockin } from "../redux/UserSlice";
+import { setClockin, setUserDetails, UserState } from "../redux/UserSlice";
 import axios from "axios";
 import {
   AttendanceData,
@@ -119,6 +119,7 @@ export default function Dashboard({}: Props) {
       gender: usr.gender,
       password: usr.password,
     };
+    console.log("the object " + JSON.stringify(obj));
 
     await get_data(obj);
   };
@@ -190,8 +191,11 @@ export default function Dashboard({}: Props) {
       const data_anaytics = calculateDashBoardAnalyticDaily(
         new Map(my_attendance_data_daily)
       );
-      console.log("called calculateDashBoardAnalyticDaily with input : "+ new Map(my_attendance_data_daily));
-      console.log("analytic data :  " +  data_anaytics);
+      console.log(
+        "called calculateDashBoardAnalyticDaily with input : " +
+          new Map(my_attendance_data_daily)
+      );
+      console.log("analytic data :  " + data_anaytics);
       console.log("setting up analytics");
       setAnalyticData(data_anaytics);
       console.log("finish ed setting up analytics");
@@ -222,17 +226,16 @@ export default function Dashboard({}: Props) {
 
   useEffect(() => {
     console.log("Updated usestate analyticData :", analyticData);
-    if(analyticData !== undefined){
+    if (analyticData !== undefined) {
       const totalSeconds = isAnalyticsWithComparison(analyticData)
-      ? analyticData.compare.working_hours.hours * 3600 +
-        analyticData.compare.working_hours.minutes * 60 +
-        analyticData.compare.working_hours.seconds
-      : analyticData.working_hours.hours * 3600 +
-        analyticData.working_hours.minutes * 60 +
-        analyticData.working_hours.seconds;
-    setTotalseconds(totalSeconds);
+        ? analyticData.compare.working_hours.hours * 3600 +
+          analyticData.compare.working_hours.minutes * 60 +
+          analyticData.compare.working_hours.seconds
+        : analyticData.working_hours.hours * 3600 +
+          analyticData.working_hours.minutes * 60 +
+          analyticData.working_hours.seconds;
+      setTotalseconds(totalSeconds);
     }
-  
   }, [analyticData]);
 
   // useEffect(() => {

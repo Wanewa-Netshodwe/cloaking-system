@@ -131,7 +131,6 @@ const RegistrationPage = () => {
                 surname: result.data.surname,
                 createdAt: new Date(result.data.createdAt),
               };
-
               dispatch(setUserDetails(usr));
               nav("/Dashboard");
             }

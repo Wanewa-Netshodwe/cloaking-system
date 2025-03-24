@@ -11,6 +11,7 @@ import {
   UserAttendance,
 } from "../redux/AttendanceSlice";
 import { workMotivationQuotes } from "../utils/Quotes";
+import Spinner from "../components/Spinner";
 const SignInPage = () => {
   useEffect(() => {
     const rand = Math.round(1 + Math.random() * 39);
@@ -20,6 +21,7 @@ const SignInPage = () => {
   const [r_num, setNum] = useState(0);
   const dispatch = useDispatch();
   const nav = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setShowMessage] = useState(false);
@@ -27,6 +29,7 @@ const SignInPage = () => {
   useEffect(() => {
     setTimeout(() => {
       setShowMessage(false);
+      setLoading(false)
     }, 4000);
   }, [message]);
   const handleChangePassword = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,6 +41,7 @@ const SignInPage = () => {
     setStudentNum(event.target.value);
   };
   const handleSubmit = async () => {
+    setLoading(true);
     if (student_num.startsWith("110")) {
       const result = await axios.get("http://localhost:8092/api/report", {
         headers: { role: "HR" },
@@ -90,6 +94,7 @@ const SignInPage = () => {
           }, 3000);
         }
       }
+      setLoading(false);
 
       return;
     }
@@ -127,8 +132,8 @@ const SignInPage = () => {
         }
 
         console.log(result);
-
         dispatch(setUserDetails(usr));
+        setLoading(false);
         nav("/Dashboard");
       }
     } catch (err) {
@@ -189,17 +194,13 @@ const SignInPage = () => {
               ></input>
             </div>
           </div>
-          <p className="mt-5 text-end mr-24 text-[#5A91CB] text-poppins font-semibold ">
-            <a className="text-[#1D9BF0]" href="/">
-              Forgot Password?
-            </a>
-          </p>
 
           <button
             onClick={handleSubmit}
-            className=" mt-5 hover:bg-[#2b81ba] font-poppins text-white bg-[#1D9BF0] w-[565px] p-2  rounded-md "
+            className=" mt-5 hover:bg-[#2b81ba] items-center flex justify-center  gap-3 font-poppins text-white bg-[#1D9BF0] w-[565px] p-2  rounded-md "
           >
             Login
+            {loading && <Spinner color="green" />}
           </button>
           <p className="mt-5 text-center mr-24 text-[#5A91CB] text-poppins font-semibold ">
             Don't you have account?

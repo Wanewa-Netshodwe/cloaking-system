@@ -9,7 +9,7 @@ export const store = configureStore({
     user: userSlice,
     app: appSlice,
     timer: timerSlice,
-    attendance_data:attendanceSlice
+    attendance_data: attendanceSlice,
   },
 });
 // Infer the `RootState` and `AppDispatch` types from the store itself
