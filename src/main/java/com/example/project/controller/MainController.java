@@ -59,11 +59,16 @@ public class MainController {
              user.setProfile_pic(fileUrl);
             }
 
-            // Save the user and capture the saved entity
-            User savedUser = service.saveUser(user);
 
-            // Return the saved user with updated metadata
-            return ResponseEntity.ok().body(savedUser);
+            int updated = service.updateUser(user,user.getStudentNumber());
+            if(updated >0){
+                System.out.println("Upaded "+updated +"rows");
+            }else{
+                System.out.print("no rows Upadted");
+            }
+
+
+            return ResponseEntity.ok().body(user);
         } catch (IOException e) {
             System.out.println(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

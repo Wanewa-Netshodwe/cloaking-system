@@ -26,35 +26,12 @@ public class BusinessLogic {
     @Autowired
     private TimeWorkedRepository timeWorkRepository;
 
+    public int updateUser(User user,String studNumber){
+        return userRepository.updateUserByStudentNumber(user.getFullName(),user.getSurname(),user.getEmailAddress(),user.getContactNo(),user.getProfile_pic() ,studNumber);
+    }
     @Transactional
     public User saveUser(User user) {
-        System.out.println(user.getFullName());
-        try {
-            return userRepository.save(user);
-        } catch (ObjectOptimisticLockingFailureException e) {
-            // Check if the user has a valid ID
-            if (user.getId() == null) {
-                // This is a new user, so we can just save it
-                user.setVersion(null); // Reset version if it exists
-                return userRepository.save(user);
-            }
-
-            // Try to find the latest version of the user
-            Optional<User> freshUserOpt = userRepository.findById(user.getId());
-
-            if (freshUserOpt.isPresent()) {
-                User freshUser = freshUserOpt.get();
-                // Transfer updated fields from user to freshUser
-                // Example: freshUser.setName(user.getName());
-                // Add all relevant field transfers here
-
-                return userRepository.save(freshUser);
-            } else {
-                // User doesn't exist anymore, handle this case
-                // You could create a new user, throw a custom exception, or handle it differently
-                throw new EntityNotFoundException("User with ID " + user.getId() + " no longer exists");
-            }
-        }
+        return userRepository.save(user);
     }
 
     public User correctPassword(LoginModel login ){
