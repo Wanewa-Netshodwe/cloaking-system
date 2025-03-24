@@ -29,14 +29,14 @@ export default function Dashboard({}: Props) {
     let interval: NodeJS.Timer;
     if (running) {
       interval = setInterval(() => {
-        dispatch(increment()); // Increments time every second
+        dispatch(increment());
       }, 1000);
     } else {
       //@ts-ignore
       clearInterval(interval);
     }
 
-    return () => clearInterval(interval); // Cleanup on unmount
+    return () => clearInterval(interval);
   }, [running, dispatch]);
 
   const defaultClassNames = getDefaultClassNames();
@@ -51,15 +51,6 @@ export default function Dashboard({}: Props) {
   }, [blocked]);
   const handelBtnPress = async () => {
     if (clocked_in) {
-      try {
-        const result = await axios.post(
-          "http://localhost:8092/api/clockout",
-          usr
-        );
-        console.log(result.status);
-      } catch (err) {
-        console.log(err);
-      }
       dispatch(setAppDetails(true));
     } else {
       try {
@@ -237,8 +228,9 @@ export default function Dashboard({}: Props) {
               </div>
               <div>
                 <p className="font-poppins text-[35px] mt-4 text-center font-semibold text-[#2C5B8C]">
-                  {value.getHours()} : {value.getMinutes()}:{" "}
-                  {value.getSeconds()}
+                  {String(value.getHours()).padStart(2, "0")} :{" "}
+                  {String(value.getMinutes()).padStart(2, "0")}:{" "}
+                  {String(value.getSeconds()).padStart(2, "0")}
                 </p>
               </div>
             </div>

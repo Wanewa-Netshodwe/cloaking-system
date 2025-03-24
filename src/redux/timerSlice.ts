@@ -12,6 +12,9 @@ const timerSlice = createSlice({
         state.time += 1;
       }
     },
+    setTime: (state, action) => {
+      state.time = action.payload;
+    },
     startTimer: (state) => {
       state.running = true;
     },
@@ -25,5 +28,6 @@ const timerSlice = createSlice({
   },
 });
 
-export const { increment, startTimer, stopTimer, resetTimer } = timerSlice.actions;
+export const { increment, startTimer, stopTimer, resetTimer, setTime } =
+  timerSlice.actions;
 export default timerSlice.reducer;

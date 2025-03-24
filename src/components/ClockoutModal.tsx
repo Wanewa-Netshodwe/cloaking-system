@@ -4,17 +4,26 @@ import { setAppDetails } from "../redux/appSlice";
 import { RootState } from "../redux/store";
 import { increment, startTimer, stopTimer } from "../redux/timerSlice";
 import { setClockin } from "../redux/UserSlice";
+import axios from "axios";
 
 type Props = {};
 
 export default function ClockoutModal({}: Props) {
   const dispatch = useDispatch();
-
+  const usr = useSelector((state: RootState) => state.user);
   const handleCancel = () => {
     dispatch(setAppDetails(false));
   };
 
-  const handleYes = () => {
+  const handleYes = async () => {
+    try {
+      const result = await axios.post(
+        "http://localhost:8092/api/clockout",
+        usr
+      );
+    } catch (err) {
+      console.log(err);
+    }
     dispatch(setAppDetails(false));
     dispatch(stopTimer());
     dispatch(setClockin(false));

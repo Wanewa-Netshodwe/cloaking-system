@@ -21,14 +21,32 @@ import { UserState } from "../redux/UserSlice";
 import axios from "axios";
 import { data } from "react-router-dom";
 import { AttendanceData, setAttendanceData } from "../redux/AttendanceSlice";
+import { increment } from "../redux/timerSlice";
+import { da } from "@faker-js/faker/.";
 
 type Props = {};
 
 export default function AttendanceReport({}: Props) {
   const dispatch = useDispatch();
   const defaultClassNames = getDefaultClassNames();
-  const submitDatabase = () => {};
   const [value, setValue] = useState(new Date());
+  const [fromDate, setFromDate] = useState(new Date());
+  const [toDate, setToDate] = useState(new Date());
+  console.log("from Date : " + fromDate);
+  console.log("to Date : " + toDate);
+  const { time, running } = useSelector((state: RootState) => state.timer);
+  useEffect(() => {
+    let interval: NodeJS.Timer;
+    if (running) {
+      interval = setInterval(() => {
+        dispatch(increment());
+      }, 1000);
+    } else {
+      //@ts-ignore
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [running, dispatch]);
   const attendance_data = useSelector(
     (state: RootState) => state.attendance_data.my_attendance_data
   );
@@ -51,9 +69,9 @@ export default function AttendanceReport({}: Props) {
         let attendance_data_array: AttendanceData[] = [];
         result.data.map((data: any) => {
           attendance_data_array.push({
-            clock_in: data.clock_in,
-            clock_out: data.clock_out,
-            todayDate: data.todayDate,
+            clock_in: new Date(data.clock_in),
+            clock_out: new Date(data.clock_out),
+            todayDate: new Date(data.todayDate),
             valid: data.valid,
             workHours: data.timeWorkedModel,
           });
@@ -79,27 +97,48 @@ export default function AttendanceReport({}: Props) {
       get_data(obj);
     }
   }, []);
-  let options = {
-    useCustomTime: false,
-    width: "300px",
-    border: true,
-    borderColor: "#2e2e2e",
-    baseColor: "#17a2b8",
-    centerColor: "#459cff",
-    centerBorderColor: "#ffffff",
-    handColors: {
-      second: "#d81c7a",
-      minute: "#ffffff",
-      hour: "#ffffff",
-    },
-    seconds: 1,
-    minutes: 10,
-    hours: 22,
-  };
-  type ValuePiece = Date | null;
 
-  type Value = ValuePiece | [ValuePiece, ValuePiece];
-  const [value2, onChange] = useState<Value>(new Date());
+  const [currentPage, setCurrentPage] = useState(1);
+  const items_per_page = 8;
+  const pages_i = Math.round(data.length / items_per_page);
+  const pages = Array.from({ length: pages_i }).fill(1);
+  const idx_last = currentPage * items_per_page;
+  const first_index = idx_last - items_per_page;
+  const [current_rows, setCurrent_Rows] = useState(
+    attendance_data.slice(first_index, idx_last)
+  );
+  const handleFromDate = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFromDate(new Date(event.target.value));
+  };
+  const handleToDate = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setToDate(new Date(event.target.value));
+    const array: AttendanceData[] = attendance_data.filter(
+      (data) => data.todayDate >= fromDate && data.todayDate <= toDate
+    );
+    setCurrent_Rows(array);
+  };
+
+  const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const target = event.target.value;
+    console.log(target);
+    if (target.length > 4) {
+      const array: AttendanceData[] = attendance_data
+        .map((data) => {
+          const month = String(data.todayDate.getMonth() + 1).padStart(2, "0");
+          const year = data.todayDate.getFullYear();
+          const day = String(data.todayDate.getDate()).padStart(2, "0");
+          const value = `${year}-${month}-${day}`;
+          console.log(value);
+          return value === target ? data : undefined;
+        })
+        .filter((data): data is AttendanceData => data !== undefined);
+      console.log(array);
+      setCurrent_Rows(array);
+    } else {
+      setCurrent_Rows(attendance_data.slice(first_index, idx_last));
+    }
+  };
+
   return (
     <div className="w-[100vw] h-[120%] flex  bg-[#F3F8FB] border-2">
       <SideMenuBar current="AttendanceReport" />
@@ -114,7 +153,8 @@ export default function AttendanceReport({}: Props) {
           </p> */}
           <div className="relative">
             <input
-              placeholder="Search"
+              onChange={handleSearchInput}
+              placeholder="YYYY-MM-DD"
               className="mt-1 placeholder:text-[#83ACD8] placeholder:font-poppins
                 pl-2 font-poppins text-[#83ACD8] rounded-md
                 placeholder:pl-2 focus:outline-none
@@ -140,6 +180,7 @@ export default function AttendanceReport({}: Props) {
                   </span>
                   <input
                     type="date"
+                    onChange={handleFromDate}
                     className="w-[95px] focus:outline-none text-[#1F4062] font-poppins text-[13px]"
                   />
                 </div>
@@ -149,6 +190,7 @@ export default function AttendanceReport({}: Props) {
                   </span>
                   <input
                     type="date"
+                    onChange={handleToDate}
                     className="w-[95px] focus:outline-none text-[#1F4062] font-poppins text-[13px]"
                   />
                 </div>
@@ -169,7 +211,7 @@ export default function AttendanceReport({}: Props) {
         </div>
 
         <div className="mt-8 h-[575px] w-[1205px] p-5 bg-white shadow-[#5A91CB] shadow-sm border-2 border-[#a4c3e3] rounded-md">
-          <table>
+          <table cellPadding={10}>
             <thead>
               <th className="text-start w-[225px]">
                 <span className="font-poppins text-[#2C5B8C]  ">Date</span>
@@ -222,35 +264,73 @@ export default function AttendanceReport({}: Props) {
               </th>
             </thead>
             <tbody>
-              <tr>
-                <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
-                  <span className=" font-poppins  text-[#67a2e0]">
-                    25-01-2023
-                  </span>
-                </td>
-                <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
-                  <span className=" font-poppins  text-[#e85e38]">
-                    09:46 AM
-                  </span>
-                </td>
-                <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
-                  <span className=" font-poppins  text-[#67a2e0]">
-                    09:46 AM
-                  </span>
-                </td>
-                <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
-                  <span className=" font-poppins  text-[#67a2e0]">
-                    1 Hr 00 Mins 00 Secs
-                  </span>
-                </td>
-                <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
-                  <span className=" font-poppins  text-[#67a2e0]">
-                    7 Hr 12 Mins 50 Secs
-                  </span>
-                </td>
-              </tr>
+              {current_rows.length > 0 ? (
+                <>
+                  {current_rows.map((data) => {
+                    return (
+                      <tr>
+                        <td className="border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
+                          <span className=" font-poppins  text-[#67a2e0]">
+                            {data.clock_in.getFullYear()}-
+                            {String(data.clock_in.getMonth() + 1).padStart(
+                              2,
+                              "0"
+                            )}
+                            -{String(data.clock_in.getDate()).padStart(2, "0")}
+                          </span>
+                        </td>
+                        <td className=" border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
+                          <span
+                            className={`font-poppins ${
+                              data.clock_in.getHours() > 8 ||
+                              (data.clock_in.getHours() === 8 &&
+                                data.clock_in.getMinutes() > 10)
+                                ? "text-[#e85e38]"
+                                : "text-green-300"
+                            }`}
+                          >
+                            {String(data.clock_in.getHours()).padStart(2, "0")}{" "}
+                            :{" "}
+                            {String(data.clock_in.getMinutes()).padStart(
+                              2,
+                              "0"
+                            )}
+                          </span>
+                        </td>
+                        <td className=" border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
+                          <span className=" font-poppins  text-[#67a2e0]">
+                            {data.clock_out !== null
+                              ? `${String(data.clock_out.getHours()).padStart(
+                                  2,
+                                  "0"
+                                )}:${String(
+                                  data.clock_out.getMinutes()
+                                ).padStart(2, "0")}`
+                              : "not clocked out"}
+                          </span>
+                        </td>
+                        <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
+                          <span className=" font-poppins  text-[#67a2e0]">
+                            1 Hr 00 Mins 00 Secs
+                          </span>
+                        </td>
+                        <td className=" border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
+                          <span className=" font-poppins  text-[#67a2e0]">
+                            {data.workHours.hours} Hr {data.workHours.minutes}{" "}
+                            Mins {data.workHours.seconds % 60} Secs
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </>
+              ) : (
+                <p className=" font-poppins font-semibold text-[18px]   text-[#67a2e0]">
+                  No Data Found
+                </p>
+              )}
 
-              <tr>
+              {/* <tr>
                 <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
                   <span className=" font-poppins  text-[#67a2e0]">
                     25-01-2023
@@ -276,9 +356,30 @@ export default function AttendanceReport({}: Props) {
                     7 Hr 12 Mins 50 Secs
                   </span>
                 </td>
-              </tr>
+              </tr> */}
             </tbody>
           </table>
+          <div className="mt-4 ">
+            <div className="flex gap-2  w-[96%] justify-end ">
+              {pages.length > 1 &&
+                pages.map((_, idx) => {
+                  return (
+                    <button
+                      onClick={() => {
+                        setCurrentPage(idx + 1);
+                      }}
+                      className={`p-1  rounded-md w-[40px] ${
+                        idx + 1 === currentPage ? "bg-[#3A4C4F]" : "bg-white "
+                      } 
+            ${idx + 1 === currentPage ? "text-white" : "text-[#3A4C4F] "}
+            font-poppins font-semibold `}
+                    >
+                      {idx + 1}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
         </div>
       </div>
     </div>

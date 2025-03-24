@@ -6,14 +6,30 @@ import "../components/clock.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { GenerateAvator } from "../utils/GenerateAvator";
 import Spinner from "../components/Spinner";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
+import { increment } from "../redux/timerSlice";
 
 type Props = {};
 
 export default function MyAccount({}: Props) {
   const [image, setImage] = useState("");
+  const dispatch = useDispatch();
   const fileInputRef = useRef(null);
+  const { time, running } = useSelector((state: RootState) => state.timer);
+  useEffect(() => {
+    let interval: NodeJS.Timer;
+    if (running) {
+      interval = setInterval(() => {
+        dispatch(increment()); 
+      }, 1000);
+    } else {
+      //@ts-ignore
+      clearInterval(interval);
+    }
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, [running, dispatch]);
   const handleClick = () => {
     //@ts-ignore
     fileInputRef.current.click();

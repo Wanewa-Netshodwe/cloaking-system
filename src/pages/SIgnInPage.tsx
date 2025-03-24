@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { setUserDetails, UserState } from "../redux/UserSlice";
+import { setClockin, setUserDetails, UserState } from "../redux/UserSlice";
 import { useDispatch } from "react-redux";
+import { setTime, startTimer } from "../redux/timerSlice";
 const SignInPage = () => {
   const dispatch = useDispatch();
   const nav = useNavigate();
@@ -26,18 +27,26 @@ const SignInPage = () => {
     if (result.status === 200) {
       console.log(new Date(result.data.createdAt));
       let usr: UserState = {
-        id: result.data.id,
-        clocked_in: false,
-        profile_pic: result.data.profile_pic,
-        contactNo: result.data.contactNo,
-        emailAddress: result.data.emailAddress,
-        fullName: result.data.fullName,
-        gender: result.data.gender,
-        password: result.data.password,
-        studentNumber: result.data.studentNumber,
-        surname: result.data.surname,
+        id: result.data.user.id,
+        clocked_in: result.data.user.seconds > 0 ? true : false,
+        profile_pic: result.data.user.profile_pic,
+        contactNo: result.data.user.contactNo,
+        emailAddress: result.data.user.emailAddress,
+        fullName: result.data.user.fullName,
+        gender: result.data.user.gender,
+        password: result.data.user.password,
+        studentNumber: result.data.user.studentNumber,
+        surname: result.data.user.surname,
         createdAt: new Date(result.data.createdAt),
       };
+      if (result.data.seconds > 0) {
+        dispatch(setClockin(result.data.clockin));
+        if (result.data.clockin) {
+          dispatch(startTimer());
+        }
+        dispatch(setTime(result.data.seconds));
+      }
+
       console.log(result);
       dispatch(setUserDetails(usr));
       nav("/Dashboard");
