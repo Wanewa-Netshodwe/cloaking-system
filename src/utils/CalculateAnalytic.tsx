@@ -2,12 +2,34 @@ import { useState, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { AttendanceData } from "../redux/AttendanceSlice";
-
+interface Metrics {
+    late_perc: number;
+    ontime_perc: number;
+    working_hours: { seconds: number; hours: number; minutes: number };
+    lunch_hours: number;
+    total_records: number;
+  }
+  
+  interface AnalyticsWithComparison {
+    current: Metrics;
+    compare: Metrics;
+    changes: {
+      late_perc_change: number;
+      ontime_perc_change: number;
+      working_hours_change: number;
+      lunch_hours_change: number;
+      attendance_change: number;
+    };
+  }
+  
+  type Analytics = Metrics | AnalyticsWithComparison;
 export const useAttendanceAnalytics = () => {
-  const attendance_data = useSelector(
+  const attendance_data_map = useSelector(
     (state: RootState) => state.attendance_data.my_attendance_data
-  );
+  ) as Map<string, AttendanceData[]>;
+
   const [compareMonth, setCompareMonth] = useState<Date | null>(null);
+
   const isOnTime = useCallback((clockin: Date): boolean => {
     if (
       clockin.getHours() > 8 ||
@@ -71,38 +93,27 @@ export const useAttendanceAnalytics = () => {
     []
   );
 
-  const filterDataByMonth = useCallback(
-    (data: AttendanceData[], date: Date): AttendanceData[] => {
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-      const target = `${year}-${month}`;
+  const getMonthKey = useCallback((date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${year}-${month}`;
+  }, []);
 
-      return data
-        .map((record) => {
-          const recordMonth = String(record.todayDate.getMonth() + 1).padStart(
-            2,
-            "0"
-          );
-          const recordYear = record.todayDate.getFullYear();
-          const value = `${recordYear}-${recordMonth}`;
-          if (value === target) {
-            return record;
-          } else {
-            return undefined;
-          }
-        })
-        .filter((record): record is AttendanceData => record !== undefined);
+  const getDataForMonth = useCallback(
+    (date: Date): AttendanceData[] => {
+      const key = getMonthKey(date);
+      return attendance_data_map.get(key) || [];
     },
-    []
+    [attendance_data_map, getMonthKey]
   );
 
   const calculateDashBoardAnalytic = useCallback(
     (compareDate: Date) => {
       const now = new Date();
 
-      const compareMonth_data = filterDataByMonth(attendance_data, compareDate);
+      const compareMonth_data = getDataForMonth(compareDate);
 
-      const current_month_data = filterDataByMonth(attendance_data, now);
+      const current_month_data = getDataForMonth(now);
 
       const current_metrics = calculateMetrics(current_month_data);
 
@@ -149,10 +160,10 @@ export const useAttendanceAnalytics = () => {
         };
       }
     },
-    [attendance_data, calculateMetrics, calculateChange, filterDataByMonth]
+    [calculateMetrics, calculateChange, getDataForMonth]
   );
 
-  const analytics = useMemo(() => {
+  const analytics = useMemo<Analytics|null>(() => {
     if (compareMonth) {
       return calculateDashBoardAnalytic(compareMonth);
     }
@@ -160,21 +171,16 @@ export const useAttendanceAnalytics = () => {
   }, [compareMonth, calculateDashBoardAnalytic]);
 
   const availableMonths = useMemo(() => {
-    const months = new Set<string>();
+    const months: Date[] = [];
 
-    attendance_data.forEach((record) => {
-      const month = String(record.todayDate.getMonth() + 1).padStart(2, "0");
-      const year = record.todayDate.getFullYear();
-      months.add(`${year}-${month}`);
+    attendance_data_map.forEach((_, key) => {
+      const year = parseInt(key.substring(0, 4));
+      const month = parseInt(key.substring(4, 6)) - 1;
+      months.push(new Date(year, month));
     });
 
-    return Array.from(months)
-      .sort()
-      .map((monthStr) => {
-        const [year, month] = monthStr.split("-").map(Number);
-        return new Date(year, month - 1);
-      });
-  }, [attendance_data]);
+    return months.sort((a, b) => a.getTime() - b.getTime());
+  }, [attendance_data_map]);
 
   return {
     analytics,

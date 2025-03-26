@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { UserState } from "./UserSlice";
 type workHours = {
   hours: number;
   minutes: number;
@@ -12,30 +13,46 @@ export type AttendanceData = {
   workHours: workHours;
   valid: boolean;
 };
-const my_attendance_data: AttendanceData[] = [
-  {
-    clock_in: new Date(),
-    clock_out: null,
-    todayDate: new Date(),
-    valid: false,
-    workHours: {
-      hours: 0,
-      minutes: 0,
-      seconds: 0,
-    },
-  },
-];
+export type UserAttendance = {
+  user_id: UserState;
+  clock_in: Date;
+  clock_out: Date | null;
+  todayDate: Date;
+  workHours: workHours;
+  valid: boolean;
+};
+const my_attendance_data: Map<string, AttendanceData[]> = new Map();
+const all_attendance_data: Map<string, UserAttendance[]> = new Map();
+const my_attendance_data_daily: Map<string, AttendanceData> = new Map();
+const HR_attendance_data: UserAttendance[] = [];
 const initialState = {
+  all_attendance_data,
   my_attendance_data,
+  my_attendance_data_daily,
+  HR_attendance_data,
 };
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState,
   reducers: {
+    setHRattendanceData: (state, action) => {
+      state.HR_attendance_data = action.payload;
+    },
     setAttendanceData: (state, action) => {
       state.my_attendance_data = action.payload;
     },
+    setAttendanceDataDaily: (state, action) => {
+      state.my_attendance_data_daily = action.payload;
+    },
+    setAllattendance: (state, action) => {
+      state.all_attendance_data = action.payload;
+    },
   },
 });
-export const { setAttendanceData } = attendanceSlice.actions;
+export const {
+  setAttendanceData,
+  setAttendanceDataDaily,
+  setAllattendance,
+  setHRattendanceData,
+} = attendanceSlice.actions;
 export default attendanceSlice.reducer;

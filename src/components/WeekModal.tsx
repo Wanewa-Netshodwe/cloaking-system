@@ -1,11 +1,18 @@
 import { motion, AnimatePresence } from "framer-motion";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { faCaretLeft, faCaretRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-type Props = {};
+import { setHRattendanceData, UserAttendance } from "../redux/AttendanceSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../redux/store";
+type Props = {
+  setselectedDate: React.Dispatch<React.SetStateAction<Date>>
+};
 
-export default function WeekModal({}: Props) {
+export default function WeekModal({
+  setselectedDate
+}: Props) {
   const WEEKDAYS = [
     "Sunday",
     "Monday",
@@ -18,9 +25,11 @@ export default function WeekModal({}: Props) {
   const today = new Date();
   const [selected, setSelected] = useState(today.getDate());
   const startOfWeek = new Date(today);
-
+  const dispatch = useDispatch();
   startOfWeek.setDate(today.getDate() - today.getDay());
-
+  const attendance_map = useSelector(
+    (state: RootState) => state.attendance_data.all_attendance_data
+  );
   const daysInThisWeek: number[] = [];
 
   for (let i = -7; i < 7; i++) {
@@ -42,6 +51,39 @@ export default function WeekModal({}: Props) {
   const itemsPerPage = 7;
   const [index, setIndex] = useState(list.length - itemsPerPage);
   const currentItems = list.slice(index, index + itemsPerPage);
+  const determineRec = (map: Map<string, UserAttendance[]>, selected: Date) => {
+    console.log("week dmodal selected date : "+ selected)
+    const selected_start = new Date(selected);
+    selected_start.setHours(0, 0, 0, 0);
+    const selected_end = new Date(selected);
+    selected_end.setHours(23, 59, 59, 999);
+    let day_records: UserAttendance[] = [];
+    map.forEach((records, fullName) => {
+      records.forEach((record) => {
+        const recordDate = new Date(record.todayDate);
+
+        if (recordDate >= selected_start && recordDate <= selected_end) {
+          day_records.push(record);
+        }
+      });
+    });
+
+    console.log("Found records:", day_records);
+
+    // Dispatch the records found for the selected day
+    dispatch(setHRattendanceData(day_records));
+  };
+
+  useEffect(() => {
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+    const seleted_date = new Date(year, month, selected-1);
+    seleted_date.setHours(23, 60, 60, 60);
+    setselectedDate(seleted_date)
+    determineRec(attendance_map, seleted_date);
+    console.log("selected date : " + seleted_date);
+  }, [selected]);
 
   const handleNext = () => {
     if (currentItems.length <= 6) {

@@ -8,6 +8,10 @@ import { GenerateAvator } from "../utils/GenerateAvator";
 import { GenerateInitials } from "../utils/GenerateInitials";
 import "./table.css";
 import HRDashboardLoader from "../components/HRDashboardLoader";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
+import { UserAttendance } from "../redux/AttendanceSlice";
+import { calculateChangeHR, DataChange, isOnTime } from "../utils/Analytics";
 type Props = {};
 
 export default function DashboardHR({}: Props) {
@@ -33,11 +37,62 @@ export default function DashboardHR({}: Props) {
   const first_index = idx_last - items_per_page;
   const current_rows = data.slice(first_index, idx_last);
   const [loading, setLoading] = useState(true);
+  const [seletectedDate, setselectedDate] = useState<Date>(new Date());
+  const [analytics, setAnayltics] = useState<DataChange>();
+  const yesterday_rec = useSelector(
+    (state: RootState) => state.attendance_data.HR_attendance_data
+  );
+  const all_attendance = useSelector(
+    (state: RootState) => state.attendance_data.all_attendance_data
+  );
+  const determineRec = (map: Map<string, UserAttendance[]>, selected: Date) => {
+    const selected_start = new Date(selected);
+    selected_start.setHours(0, 0, 0, 0);
+    const selected_end = new Date(selected);
+    selected_end.setHours(23, 59, 59, 999);
+    let day_records: UserAttendance[] = [];
+    map.forEach((records, fullName) => {
+      records.forEach((record) => {
+        const recordDate = new Date(record.todayDate);
+
+        if (recordDate >= selected_start && recordDate <= selected_end) {
+          day_records.push(record);
+        }
+      });
+    });
+    const yesterdayStart = new Date(selected);
+    yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+    yesterdayStart.setHours(0, 0, 0, 0);
+
+    let yesterday_records: UserAttendance[] = [];
+
+    map.forEach((records, fullName) => {
+      records.forEach((record) => {
+        const recordDate = new Date(record.todayDate);
+        if (recordDate >= yesterdayStart && recordDate <= selected) {
+          yesterday_records.push(record);
+        }
+      });
+    });
+    console.log("prev date: " + yesterdayStart);
+    console.log("current date: " + selected);
+    console.log(
+      "comparing prev " +
+        JSON.stringify(yesterday_records) +
+        "and curent :" +
+        JSON.stringify(day_records)
+    );
+    setAnayltics(calculateChangeHR(yesterday_records, day_records));
+  };
+  useEffect(() => {
+    determineRec(all_attendance, seletectedDate);
+  }, [seletectedDate]);
 
   setTimeout(() => {
     setLoading(false);
   }, 3000);
 
+  console.log(yesterday_rec);
   return (
     <div>
       {loading ? (
@@ -50,88 +105,245 @@ export default function DashboardHR({}: Props) {
             <p className="font-poppins font-semibold text-[20px]">Attendance</p>
 
             <div className="mt-3 flex gap-3">
-              <div className="p-4 flex flex-col gap-3  w-[260px] rounded-md bg-[#d5eada]">
+              <div
+                className={`p-4 flex flex-col gap-3  w-[260px] rounded-md  ${
+                  analytics?.changes.attendance_change!! < 0
+                    ? "bg-[#f18b8b]"
+                    : "bg-[#d5eada]"
+                }`}
+              >
                 <div>
-                  <FontAwesomeIcon icon={faUserGroup} color="#3A4C4F" />
+                  <FontAwesomeIcon
+                    icon={faUserGroup}
+                    color={`  ${
+                      analytics?.changes.attendance_change!! < 0
+                        ? "text-[#d9dada]"
+                        : "text-[#3A4C4F]"
+                    }`}
+                  />
                 </div>
                 <div>
-                  <p className="text-[20px] font-poppins font-semibold text-[#3A4C4F]">
-                    126 Students
+                  <p
+                    className={`text-[20px] font-poppins font-semibold  ${
+                      analytics?.changes.attendance_change!! < 0
+                        ? "text-[#d9dada]"
+                        : "text-[#3A4C4F]"
+                    } `}
+                  >
+                    {analytics?.total_records_current} Students
                   </p>
                 </div>
+
                 <div>
-                  <span className="text-[15px] font-poppins font-semibold text-[#3b8956]">
-                    +15%
+                  <span
+                    className={`text-[15px] font-poppins font-semibold ${
+                      analytics?.changes.attendance_change!! < 0
+                        ? "text-[#e13232]"
+                        : "text-[#3b8956]"
+                    }`}
+                  >
+                    {analytics?.changes.attendance_change!! < 0 ? " -" : "+"}{" "}
+                    {Math.abs(analytics?.changes.attendance_change!!)}%
                   </span>
-                  <span className="text-[14px] font-poppins font-semibold text-[#686d6a]">
-                    {" "}
-                    vs last week{" "}
+                  <span
+                    className={`text-[12px] font-poppins font-semibold  ${
+                      analytics?.changes.attendance_change!! < 0
+                        ? "text-[#d9dada]"
+                        : "text-[#818383]"
+                    }`}
+                  >
+                    vs {seletectedDate.getFullYear()}/
+                    {seletectedDate.getMonth() + 1}/
+                    {seletectedDate.getDate() - 1}
                   </span>
                 </div>
               </div>
 
-              <div className="p-4 flex flex-col gap-3  w-[260px] rounded-md bg-[#d5eada]">
+              <div
+                className={`p-4 flex flex-col gap-3  w-[260px] rounded-md  ${
+                  analytics?.changes.attendance_change!! < 0
+                    ? "bg-[#f18b8b]"
+                    : "bg-[#d5eada]"
+                }`}
+              >
                 <div>
-                  <FontAwesomeIcon icon={faUserGroup} color="#3A4C4F" />
+                  <FontAwesomeIcon
+                    icon={faUserGroup}
+                    color={`  ${
+                      analytics?.changes.attendance_change!! < 0
+                        ? "text-[#d9dada]"
+                        : "text-[#3A4C4F]"
+                    }`}
+                  />
                 </div>
                 <div>
-                  <p className="text-[20px] font-poppins font-semibold text-[#3A4C4F]">
-                    126 Students
+                  <p
+                    className={`text-[20px] font-poppins font-semibold  ${
+                      analytics?.changes.attendance_change!! < 0
+                        ? "text-[#d9dada]"
+                        : "text-[#3A4C4F]"
+                    } `}
+                  >
+                    {analytics?.total_records_current!! -
+                      analytics?.total_records_prev!!}{" "}
+                    Absent
                   </p>
                 </div>
                 <div>
-                  <span className="text-[15px] font-poppins font-semibold text-[#3b8956]">
-                    +15%
+                  <span
+                    className={`text-[15px] font-poppins font-semibold ${
+                      analytics?.changes.attendance_change!! < 0
+                        ? "text-[#e13232]"
+                        : "text-[#3b8956]"
+                    }`}
+                  >
+                    {analytics?.changes.attendance_change!! < 0 ? " -" : "+"}{" "}
+                    {Math.abs(analytics?.changes.attendance_change!!)}%
                   </span>
-                  <span className="text-[14px] font-poppins font-semibold text-[#686d6a]">
-                    {" "}
-                    vs last week{" "}
+                  <span
+                    className={`text-[12px] font-poppins font-semibold  ${
+                      analytics?.changes.attendance_change!! < 0
+                        ? "text-[#d9dada]"
+                        : "text-[#818383]"
+                    }`}
+                  >
+                    vs {seletectedDate.getFullYear()}/
+                    {seletectedDate.getMonth() + 1}/
+                    {seletectedDate.getDate() - 1}
                   </span>
                 </div>
               </div>
 
-              <div className="p-4 flex flex-col gap-3  w-[260px] rounded-md bg-[#d5eada]">
+              <div
+                className={`p-4 flex flex-col gap-3  w-[260px] rounded-md  ${
+                  analytics?.changes.ontime_perc_change!! < 0
+                    ? "bg-[#f18b8b]"
+                    : "bg-[#d5eada]"
+                }`}
+              >
                 <div>
-                  <FontAwesomeIcon icon={faUserGroup} color="#3A4C4F" />
+                  <FontAwesomeIcon
+                    icon={faUserGroup}
+                    color={`  ${
+                      analytics?.changes.ontime_perc_change!! < 0
+                        ? "text-[#d9dada]"
+                        : "text-[#3A4C4F]"
+                    }`}
+                  />
                 </div>
                 <div>
-                  <p className="text-[20px] font-poppins font-semibold text-[#3A4C4F]">
-                    126 Students
+                  <p
+                    className={`text-[20px] font-poppins font-semibold  ${
+                      analytics?.changes.ontime_perc_change!! < 0
+                        ? "text-[#d9dada]"
+                        : "text-[#3A4C4F]"
+                    } `}
+                  >
+                    {analytics?.changes.ontime_perc_change!! < 0
+                      ? " 0"
+                      : analytics?.changes.ontime_perc_change!!}
+                    <span
+                      className={` text-[16px]   ${
+                        analytics?.changes.ontime_perc_change!! < 0
+                          ? "text-[#d9dada]"
+                          : "text-[#3A4C4F]"
+                      } font-poppins font-semibold`}
+                    >
+                      % onTime
+                    </span>
                   </p>
                 </div>
                 <div>
-                  <span className="text-[15px] font-poppins font-semibold text-[#3b8956]">
-                    +15%
+                  <span
+                    className={`text-[15px] font-poppins font-semibold ${
+                      analytics?.changes.ontime_perc_change!! < 0
+                        ? "text-[#e13232]"
+                        : "text-[#3b8956]"
+                    }`}
+                  >
+                    {analytics?.changes.ontime_perc_change!! < 0 ? "-" : "+"}
+                    {Math.abs(analytics?.changes.ontime_perc_change!!)}%
                   </span>
-                  <span className="text-[14px] font-poppins font-semibold text-[#686d6a]">
-                    {" "}
-                    vs last week{" "}
+                  <span
+                    className={`text-[12px] font-poppins font-semibold  ${
+                      analytics?.changes.ontime_perc_change!! < 0
+                        ? "text-[#d9dada]"
+                        : "text-[#818383]"
+                    }`}
+                  >
+                    vs {seletectedDate.getFullYear()}/
+                    {seletectedDate.getMonth() + 1}/
+                    {seletectedDate.getDate() - 1}
                   </span>
                 </div>
               </div>
 
-              <div className="p-4 flex flex-col gap-3  w-[260px] rounded-md bg-[#d5eada]">
+              <div
+                className={`p-4 flex flex-col gap-3  w-[260px] rounded-md  ${
+                  analytics?.changes.late_perc_change!! < 0
+                    ? "bg-[#d5eada]"
+                    : "bg-[#f18b8b]"
+                }`}
+              >
                 <div>
-                  <FontAwesomeIcon icon={faUserGroup} color="#3A4C4F" />
+                  <FontAwesomeIcon
+                    icon={faUserGroup}
+                    color={` ${
+                      analytics?.changes.late_perc_change!! < 0
+                        ? "#3A4C4F"
+                        : "#d9dada"
+                    }`}
+                  />
                 </div>
                 <div>
-                  <p className="text-[20px] font-poppins font-semibold text-[#3A4C4F]">
-                    126 Students
+                  <p
+                    className={`text-[20px] font-poppins font-semibold  ${
+                      analytics?.changes.late_perc_change!! < 0
+                        ? "text-[#3A4C4F]"
+                        : "text-[#d9dada]"
+                    } `}
+                  >
+                    {analytics?.changes.late_perc_change!! < 0
+                      ? " 0"
+                      : analytics?.changes.late_perc_change!!}
+                    <span
+                      className={` text-[16px]   ${
+                        analytics?.changes.late_perc_change!! < 0
+                          ? "text-[#3A4C4F]"
+                          : "text-[#d9dada]"
+                      } font-poppins font-semibold`}
+                    >
+                      % Late
+                    </span>
                   </p>
                 </div>
                 <div>
-                  <span className="text-[15px] font-poppins font-semibold text-[#3b8956]">
-                    +15%
+                  <span
+                    className={`text-[15px] font-poppins font-semibold ${
+                      analytics?.changes.late_perc_change!! < 0
+                        ? "text-[#3b8956]"
+                        : "text-[#e13232]"
+                    }`}
+                  >
+                    {analytics?.changes.late_perc_change!! < 0 ? "+" : "-"}
+                    {Math.abs(analytics?.changes.late_perc_change!!)}%
                   </span>
-                  <span className="text-[14px] font-poppins font-semibold text-[#686d6a]">
-                    {" "}
-                    vs last week{" "}
+                  <span
+                    className={`text-[12px] font-poppins font-semibold  ${
+                      analytics?.changes.late_perc_change!! < 0
+                        ? "text-[#818383]"
+                        : "text-[#d9dada]"
+                    }`}
+                  >
+                    vs {seletectedDate.getFullYear()}/
+                    {seletectedDate.getMonth() + 1}/
+                    {seletectedDate.getDate() - 1}
                   </span>
                 </div>
               </div>
             </div>
 
-            <WeekModal />
+            <WeekModal setselectedDate={setselectedDate} />
             <div className=" mt-5 relative">
               <input
                 placeholder="Search"
@@ -168,53 +380,86 @@ export default function DashboardHR({}: Props) {
                 </th>
               </thead>
               <tbody>
-                {current_rows.map((val) => {
-                  return (
-                    <tr className="  rounded-lg ">
-                      <td>
-                        <div className=" gap-3 flex w-[180px] items-center right-0">
-                          <img
-                            src={GenerateAvator(`${val.name}`)}
-                            className="w-[30px] h-[30px] rounded-full"
-                            alt="imagek"
-                          />
+                {yesterday_rec.length > 0 ? (
+                  yesterday_rec.map((val) => {
+                    return (
+                      <tr className="  rounded-lg ">
+                        <td>
+                          <div className=" gap-3 flex w-[180px] items-center right-0">
+                            <img
+                              src={GenerateAvator(`${val.user_id.fullName}`)}
+                              className="w-[30px] h-[30px] rounded-full"
+                              alt="imagek"
+                            />
 
-                          <p className="font-poppins font-semibold mt-[1px]">
-                            {GenerateInitials(`${val.name}`)}
-                          </p>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-5">
-                          <p className="font-poppins font-semibold text-[14px]">
-                            {val.timeIn}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center">
-                              <div className="bg-gray-400 h-3 w-3 rounded-full"></div>
-                              <div className="bg-gray-400 h-1 w-8 "></div>
-                            </div>
-                            <span className="font-poppins text-[11px] text-gray-400">
-                              7h 45m
-                            </span>
-                            <div className="flex items-center">
-                              <div className="bg-gray-400 h-1 w-8 "></div>
-                              <div className="bg-gray-400 h-3 w-3 rounded-full"></div>
-                            </div>
+                            <p className="font-poppins font-semibold mt-[1px]">
+                              {GenerateInitials(`${val.user_id.fullName}`)}
+                            </p>
                           </div>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-5">
+                            <p
+                              className={`font-poppins font-semibold ${
+                                !isOnTime(new Date(val.clock_in)) &&
+                                "text-red-500"
+                              } text-[14px]`}
+                            >
+                              {String(
+                                new Date(val.clock_in).getHours()
+                              ).padStart(2, "0")}
+                              H
+                              {String(
+                                new Date(val.clock_in).getMinutes()
+                              ).padStart(2, "0")}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center">
+                                <div className="bg-gray-400 h-3 w-3 rounded-full"></div>
+                                <div className="bg-gray-400 h-1 w-8 "></div>
+                              </div>
+                              <span className="font-poppins text-[11px] text-gray-400">
+                                {val.clock_out
+                                  ? `${String(val.workHours.hours).padStart(
+                                      2,
+                                      "0"
+                                    )} : 
+                              ${String(val.workHours.minutes).padStart(
+                                2,
+                                "0"
+                              )} : 
+                              ${String(val.workHours.seconds).padStart(2, "0")}
+                              `
+                                  : "not clocked out"}
+                              </span>
+                              <div className="flex items-center">
+                                <div className="bg-gray-400 h-1 w-8 "></div>
+                                <div className="bg-gray-400 h-3 w-3 rounded-full"></div>
+                              </div>
+                            </div>
+                            <p className="font-poppins font-semibold text-[14px]">
+                              {val.clock_out
+                                ? `  ${String(
+                                    new Date(val.clock_out).getHours()
+                                  ).padStart(2, "0")}H
+                            ${String(
+                              new Date(val.clock_out).getMinutes()
+                            ).padStart(2, "0")}`
+                                : "not clocked out"}
+                            </p>
+                          </div>
+                        </td>
+                        <td>
                           <p className="font-poppins font-semibold text-[14px]">
-                            {val.timeIn}
+                            {val.user_id.emailAddress}
                           </p>
-                        </div>
-                      </td>
-                      <td>
-                        <p className="font-poppins font-semibold text-[14px]">
-                          {val.email}
-                        </p>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <p> No data found </p>
+                )}
               </tbody>
             </table>
             <div className="mt-4 ">

@@ -13,6 +13,9 @@ import { increment } from "../redux/timerSlice";
 type Props = {};
 
 export default function MyAccount({}: Props) {
+  const user = useSelector((state: RootState) => state.user);
+  const local_item = localStorage.getItem("user");
+  const usr = local_item ? JSON.parse(local_item) : user;
   const [image, setImage] = useState("");
   const dispatch = useDispatch();
   const fileInputRef = useRef(null);
@@ -21,7 +24,7 @@ export default function MyAccount({}: Props) {
     let interval: NodeJS.Timer;
     if (running) {
       interval = setInterval(() => {
-        dispatch(increment()); 
+        dispatch(increment());
       }, 1000);
     } else {
       //@ts-ignore
@@ -42,7 +45,9 @@ export default function MyAccount({}: Props) {
       setImage(i);
     }
   };
-  const usr = useSelector((state: RootState) => state.user);
+  
+  
+
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState(usr.emailAddress);

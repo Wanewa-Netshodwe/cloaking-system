@@ -1,6 +1,9 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
-import { faArrowTrendDown } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowTrendDown,
+  faArrowTrendUp,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -33,9 +36,11 @@ type Props = {
   borderColor: string;
   color: string;
   dataValues: number[];
+  change: number;
 };
 
 export default function GraphItem({
+  change,
   borderColor,
   color,
   dataValues,
@@ -43,6 +48,20 @@ export default function GraphItem({
   perc,
   title,
 }: Props) {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "december",
+  ];
   const labels = [
     "January",
     "February",
@@ -84,6 +103,7 @@ export default function GraphItem({
       },
     },
   };
+  const today = new Date();
 
   return (
     <div className="border-2 bg-white p-5 w-[280px] border-[#C6E6FB] rounded-md">
@@ -91,8 +111,10 @@ export default function GraphItem({
 
       <div className=" flex gap-8  h-[75px]">
         <div>
-          <p className="font-poppins font-bold text-[15px] ">{month}</p>
-          <p className="font-poppins font-bold text-[36px] ">{perc}</p>
+          <p className="font-poppins font-bold text-[15px] ">
+            {months[today.getMonth()]}
+          </p>
+          <p className="font-poppins font-bold text-[30px] ">{perc}</p>
         </div>
         <div className="relative">
           {" "}
@@ -101,17 +123,27 @@ export default function GraphItem({
         </div>
       </div>
       <div>
-        <FontAwesomeIcon
-          icon={faArrowTrendDown}
-          className="text-red-500 w-[15px] h-[15px]"
-        />
-        <span className="text-red-500 font-poppins  font-semibold text-[12px]">
+        {change === 0 ? null : (
+          <FontAwesomeIcon
+            icon={change < 0 ? faArrowTrendDown : faArrowTrendUp}
+            className={`${
+              change < 0 ? "text-red-500" : "text-green-400"
+            }  w-[15px] h-[15px]`}
+          />
+        )}
+        <span
+          className={`${
+            change < 0 && change > 0 ? "text-red-500" : "text-green-400"
+          } ${
+            change === 0 && "text-[#83ACD8]"
+          } font-poppins  font-semibold text-[12px]`}
+        >
           {" "}
-          -25%{" "}
+          {Math.abs(change)}{" "}
         </span>
         <span className="text-[#83ACD8] font-poppins font-semibold   text-[12px]">
           {" "}
-          Compared to January
+          Compared to last 7 days
         </span>
       </div>
     </div>

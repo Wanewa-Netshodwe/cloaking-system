@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userSlice from "./UserSlice";
+
 import appSlice from "./appSlice";
 import timerSlice from "./timerSlice";
 import attendanceSlice from "./AttendanceSlice";

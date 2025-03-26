@@ -1,6 +1,9 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
-import { faArrowTrendDown } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowTrendDown,
+  faArrowTrendUp,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -36,6 +39,7 @@ type Props = {
   minutes: string;
   seconds: string;
   hour: string;
+  change: number;
 };
 
 export default function GraphItemHours({
@@ -47,8 +51,23 @@ export default function GraphItemHours({
   seconds,
   month,
   perc,
+  change,
   title,
 }: Props) {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "december",
+  ];
   const labels = [
     "January",
     "February",
@@ -90,6 +109,7 @@ export default function GraphItemHours({
       },
     },
   };
+  const today = new Date();
 
   return (
     <div className="border-2 bg-white p-5 w-[300px] border-[#C6E6FB] rounded-md">
@@ -97,15 +117,19 @@ export default function GraphItemHours({
         {title}
         <span className="text-[#ACC8E5] font-poppins font-light text-[16px]">
           {" "}
-          {month}
+          {months[today.getMonth()]}
         </span>
       </p>
 
       <div className=" flex gap-8  h-[75px]">
         <div>
           <p className="font-poppins font-bold text-[15px] ">{hour} Hours</p>
-          <p className="font-poppins font-bold text-[15px] ">{minutes} Minutes</p>
-          <p className="font-poppins font-bold text-[15px] ">{seconds} Seconds</p>
+          <p className="font-poppins font-bold text-[15px] ">
+            {minutes} Minutes
+          </p>
+          <p className="font-poppins font-bold text-[15px] ">
+            {seconds} Seconds
+          </p>
         </div>
         <div className="relative">
           {" "}
@@ -114,17 +138,28 @@ export default function GraphItemHours({
         </div>
       </div>
       <div>
-        <FontAwesomeIcon
-          icon={faArrowTrendDown}
-          className="text-red-500 w-[15px] h-[15px]"
-        />
-        <span className="text-red-500 font-poppins  font-semibold text-[12px]">
+        {change === 0 ? null : (
+          <FontAwesomeIcon
+            icon={change < 0 ? faArrowTrendDown : faArrowTrendUp}
+            className={`${
+              change < 0 ? "text-red-500" : "text-green-400"
+            }  w-[15px] h-[15px]`}
+          />
+        )}
+
+        <span
+          className={`${
+            change < 0 && change > 0 ? "text-red-500" : "text-green-400"
+          } ${
+            change === 0 && "text-[#83ACD8]"
+          } font-poppins  font-semibold text-[12px]`}
+        >
           {" "}
-          -25%{" "}
+          {Math.abs(change)}{" "}
         </span>
         <span className="text-[#83ACD8] font-poppins font-semibold   text-[12px]">
           {" "}
-          Compared to January
+          Compared to Last 7 days
         </span>
       </div>
     </div>

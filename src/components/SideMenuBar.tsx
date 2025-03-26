@@ -13,7 +13,9 @@ type Props = {
 };
 
 export default function SideMenuBar({ current }: Props) {
-  const usr = useSelector((state: RootState) => state.user);
+  const user = useSelector((state: RootState) => state.user);
+  const local_item = localStorage.getItem("user");
+  const usr = local_item ? JSON.parse(local_item) : user;
   const nav = useNavigate();
   return (
     <div className="bg-white   w-[250px] ">

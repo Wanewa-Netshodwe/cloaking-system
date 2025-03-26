@@ -12,6 +12,9 @@ export type UserState = {
   createdAt: Date;
   profile_pic: string;
   clocked_in: boolean;
+  new_account: boolean;
+  department: string;
+  job: string;
 };
 
 type workHours = {
@@ -27,8 +30,10 @@ type AttendanceData = {
   workHours: workHours;
 };
 
-
 const initialState: UserState = {
+  department: "",
+  job: "",
+  new_account: true,
   id: 0,
   clocked_in: false,
   profile_pic: "",
@@ -40,7 +45,6 @@ const initialState: UserState = {
   studentNumber: "",
   gender: "",
   createdAt: new Date(),
-  
 };
 
 const userSlice = createSlice({
@@ -55,6 +59,9 @@ const userSlice = createSlice({
       state.gender = action.payload.gender;
       state.studentNumber = action.payload.studentNumber;
       state.emailAddress = action.payload.emailAddress;
+      state.new_account = action.payload.new_account;
+      state.department = action.payload.department;
+      state.job = action.payload.job;
     },
     setClockin: (state, action) => {
       state.clocked_in = action.payload;

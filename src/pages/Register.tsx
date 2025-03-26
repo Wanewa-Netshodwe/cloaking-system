@@ -4,8 +4,15 @@ import { Link, Route, useNavigate } from "react-router-dom";
 import { setUserDetails, UserState } from "../redux/UserSlice";
 import Spinner from "../components/Spinner";
 import axios from "axios";
+import { punctualityQuotes } from "../utils/Quotes";
 
 const RegistrationPage = () => {
+  useEffect(() => {
+    const rand = Math.round(1 + Math.random() * 39);
+    setNum(rand);
+  }, []);
+
+  const [r_num, setNum] = useState(0);
   const dispatch = useDispatch();
   const nav = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -16,6 +23,8 @@ const RegistrationPage = () => {
   const [last_name, setLastname] = useState("");
   const [student_num, setStudentNum] = useState("");
   const [gender, setGender] = useState("Male");
+  const [job, setJob] = useState("Business Analyst");
+  const [department, setDepartment] = useState("Computer Science");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   useEffect(() => {
@@ -49,6 +58,14 @@ const RegistrationPage = () => {
   ) => {
     setStudentNum(event.target.value);
   };
+  const handleChangeJob = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setJob(event.target.value);
+  };
+  const handleChangeDepartment = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setDepartment(event.target.value);
+  };
   const handleChangeGender = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setGender(event.target.value);
   };
@@ -60,7 +77,6 @@ const RegistrationPage = () => {
     if (confirmPassword !== password) {
       setValid(false);
     } else {
-      setLoading(true);
       let obj = {
         fullName: first_name,
         surname: last_name,
@@ -69,37 +85,63 @@ const RegistrationPage = () => {
         studentNumber: student_num,
         gender: gender,
         password,
+        department,
+        job,
       };
-      try {
-        const result = await axios.post(
-          "http://localhost:8092/api/create",
-          obj,
-          {
-            headers: { role: "student" },
+      if (
+        first_name.length > 2 &&
+        last_name.length > 2 &&
+        contact.length > 2 &&
+        email.length > 2 &&
+        gender.length > 2 &&
+        password.length > 2 &&
+        password === confirmPassword &&
+        department.length > 2 &&
+        student_num.length > 2 &&
+        job.length > 2
+      ) {
+        try {
+          if (!email.includes("@")) {
+            alert("Enter valid Email");
+          } else {
+            setLoading(true);
+            const result = await axios.post(
+              "http://localhost:8092/api/create",
+              obj,
+              {
+                headers: { role: "student" },
+              }
+            );
+            if (result.status === 201) {
+              setLoading(false);
+              console.log(new Date(result.data.createdAt));
+              let usr: UserState = {
+                department: department,
+                job: job,
+                new_account: result.data.new_account,
+                id: result.data.id,
+                clocked_in: false,
+                profile_pic: result.data.profile_pic,
+                contactNo: result.data.contactNo,
+                emailAddress: result.data.emailAddress,
+                fullName: result.data.fullName,
+                gender: result.data.gender,
+                password: result.data.password,
+                studentNumber: result.data.studentNumber,
+                surname: result.data.surname,
+                createdAt: new Date(result.data.createdAt),
+              };
+
+              dispatch(setUserDetails(usr));
+              nav("/Dashboard");
+            }
           }
-        );
-        if (result.status === 201) {
-          setLoading(false);
-          console.log(new Date(result.data.createdAt));
-          let usr: UserState = {
-            id: result.data.id,
-            clocked_in: false,
-            profile_pic: result.data.profile_pic,
-            contactNo: result.data.contactNo,
-            emailAddress: result.data.emailAddress,
-            fullName: result.data.fullName,
-            gender: result.data.gender,
-            password: result.data.password,
-            studentNumber: result.data.studentNumber,
-            surname: result.data.surname,
-            createdAt: new Date(result.data.createdAt),
-          };
-          dispatch(setUserDetails(usr));
-          nav("/Dashboard");
+        } catch (err) {
+          if (axios.isAxiosError(err)) {
+          }
         }
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-        }
+      } else {
+        alert("fill in all the fields");
       }
     }
   };
@@ -242,6 +284,34 @@ const RegistrationPage = () => {
                 type="text"
               ></input>
             </div>
+            <div className="mt-5 ">
+              <p className="font-poppins font-semibold text-[15px]">Role</p>
+
+              <select
+                onChange={handleChangeJob}
+                className=" w-[250px]  text-[#83ACD8] focus:outline-none pl-2  h-[35px] border-2 rounded-md border-[#83ACD8]"
+              >
+                <option className="font-poppins ">Business Analyst</option>
+                <option className="font-poppins">IT Technician</option>
+                <option className="font-poppins">Software Developer</option>
+              </select>
+            </div>
+          </div>
+          <div className=" flex gap-16 mb-1">
+            <div className="mt-5 ">
+              <p className="font-poppins font-semibold text-[15px]">
+                Department
+              </p>
+              <select
+                onChange={handleChangeDepartment}
+                className=" w-[575px]  text-[#83ACD8] focus:outline-none pl-2  h-[35px] border-2 rounded-md border-[#83ACD8]"
+              >
+                <option className="font-poppins ">Computer Science</option>
+                <option className="font-poppins">Informatics</option>
+                <option className="font-poppins">Internet Technology</option>
+                <option className="font-poppins">Multimedia Computing</option>
+              </select>
+            </div>
           </div>
           <button
             onClick={handleRegistration}
@@ -259,7 +329,11 @@ const RegistrationPage = () => {
           </p>
         </div>
       </div>
-      <div className="bg-gradient-to-r  from-[#72C0F6] via-[#56B4F4] to-[#1D9BF0] w-full"></div>
+      <div className="bg-gradient-to-r  from-[#72C0F6] via-[#56B4F4] to-[#1D9BF0] items-center flex justify-center w-full">
+        <p className="font-poppins p-4 font-semibold text-[18px] bg-gradient-to-r from-[#fbfbfb] via-[#5e6062] to-[#363636] text-transparent bg-clip-text ">
+          {punctualityQuotes[r_num]}
+        </p>
+      </div>
     </div>
   );
 };

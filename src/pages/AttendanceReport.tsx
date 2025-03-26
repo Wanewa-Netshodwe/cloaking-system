@@ -10,19 +10,19 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
-import GraphItemHours from "../components/GraphItemHours";
-import Annoucements from "../components/Annoucements";
 import { DayPicker, getDefaultClassNames } from "react-day-picker";
 import "react-day-picker/style.css";
 import "../components/clock.css";
-import AnimatedNumbers from "react-animated-numbers";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { UserState } from "../redux/UserSlice";
 import axios from "axios";
 import { data } from "react-router-dom";
-import { AttendanceData, setAttendanceData } from "../redux/AttendanceSlice";
+import {
+  AttendanceData,
+  setAttendanceData,
+  setAttendanceDataDaily,
+} from "../redux/AttendanceSlice";
 import { increment } from "../redux/timerSlice";
-import { da } from "@faker-js/faker/.";
+import { useAttendanceAnalytics } from "../utils/CalculateAnalytic";
 
 type Props = {};
 
@@ -35,6 +35,7 @@ export default function AttendanceReport({}: Props) {
   console.log("from Date : " + fromDate);
   console.log("to Date : " + toDate);
   const { time, running } = useSelector((state: RootState) => state.timer);
+
   useEffect(() => {
     let interval: NodeJS.Timer;
     if (running) {
@@ -49,6 +50,9 @@ export default function AttendanceReport({}: Props) {
   }, [running, dispatch]);
   const attendance_data = useSelector(
     (state: RootState) => state.attendance_data.my_attendance_data
+  );
+  const my_attendance_data_daily = useSelector(
+    (state: RootState) => state.attendance_data.my_attendance_data_daily
   );
   const user = useSelector((state: RootState) => state.user);
   const get_data = async (obj: {
@@ -67,6 +71,8 @@ export default function AttendanceReport({}: Props) {
       );
       if (result.status === 200) {
         let attendance_data_array: AttendanceData[] = [];
+        let data_map: Map<string, AttendanceData[]> = new Map();
+        let data_map_daily: Map<string, AttendanceData> = new Map();
         result.data.map((data: any) => {
           attendance_data_array.push({
             clock_in: new Date(data.clock_in),
@@ -75,15 +81,37 @@ export default function AttendanceReport({}: Props) {
             valid: data.valid,
             workHours: data.timeWorkedModel,
           });
+          const year = new Date(data.todayDate).getFullYear();
+          const month = String(
+            new Date(data.todayDate).getMonth() + 1
+          ).padStart(2, "0");
+          const day = String(new Date(data.todayDate).getDate()).padStart(
+            2,
+            "0"
+          );
+          data_map.set(`${year}-${month}`, attendance_data_array);
+          data_map_daily.set(`${year}-${month}-${day}`, data);
         });
-        dispatch(setAttendanceData(attendance_data_array));
+        dispatch(setAttendanceData(data_map));
+        dispatch(setAttendanceDataDaily(data_map_daily));
       }
     } catch (err) {
       console.log(err);
     }
   };
+  const [attendance_array, setAttendanceArray] = useState<AttendanceData[]>([]);
+
   useEffect(() => {
-    if (attendance_data[0].valid) {
+    if (attendance_data.size > 0) {
+      if (current_rows.length > 0) {
+      } else {
+        let temp_array: AttendanceData[][] = [];
+        attendance_data.forEach((v, k) => {
+          temp_array.push(v);
+        });
+        const flat_array = temp_array.flatMap((data) => data);
+        setAttendanceArray(flat_array);
+      }
     } else {
       let obj = {
         fullName: user.fullName,
@@ -98,6 +126,12 @@ export default function AttendanceReport({}: Props) {
     }
   }, []);
 
+  useEffect(() => {
+    const idx_last = currentPage * items_per_page;
+    const first_index = idx_last - items_per_page;
+    setCurrent_Rows(attendance_array.slice(first_index, idx_last));
+  }, [attendance_array]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const items_per_page = 8;
   const pages_i = Math.round(data.length / items_per_page);
@@ -105,14 +139,15 @@ export default function AttendanceReport({}: Props) {
   const idx_last = currentPage * items_per_page;
   const first_index = idx_last - items_per_page;
   const [current_rows, setCurrent_Rows] = useState(
-    attendance_data.slice(first_index, idx_last)
+    attendance_array.slice(first_index, idx_last)
   );
+
   const handleFromDate = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFromDate(new Date(event.target.value));
   };
   const handleToDate = (event: React.ChangeEvent<HTMLInputElement>) => {
     setToDate(new Date(event.target.value));
-    const array: AttendanceData[] = attendance_data.filter(
+    const array: AttendanceData[] = attendance_array.filter(
       (data) => data.todayDate >= fromDate && data.todayDate <= toDate
     );
     setCurrent_Rows(array);
@@ -121,8 +156,8 @@ export default function AttendanceReport({}: Props) {
   const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     const target = event.target.value;
     console.log(target);
-    if (target.length > 4) {
-      const array: AttendanceData[] = attendance_data
+    if (target.length > 2) {
+      const array: AttendanceData[] = attendance_array
         .map((data) => {
           const month = String(data.todayDate.getMonth() + 1).padStart(2, "0");
           const year = data.todayDate.getFullYear();
@@ -135,7 +170,7 @@ export default function AttendanceReport({}: Props) {
       console.log(array);
       setCurrent_Rows(array);
     } else {
-      setCurrent_Rows(attendance_data.slice(first_index, idx_last));
+      setCurrent_Rows(attendance_array.slice(first_index, idx_last));
     }
   };
 
@@ -316,7 +351,8 @@ export default function AttendanceReport({}: Props) {
                         </td>
                         <td className=" border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
                           <span className=" font-poppins  text-[#67a2e0]">
-                            {data.workHours.hours} Hr {data.workHours.minutes}{" "}
+                            {Math.floor(data.workHours.seconds / 3600)} Hr{" "}
+                            {Math.floor((data.workHours.seconds % 3600) / 60)}{" "}
                             Mins {data.workHours.seconds % 60} Secs
                           </span>
                         </td>
@@ -329,34 +365,6 @@ export default function AttendanceReport({}: Props) {
                   No Data Found
                 </p>
               )}
-
-              {/* <tr>
-                <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
-                  <span className=" font-poppins  text-[#67a2e0]">
-                    25-01-2023
-                  </span>
-                </td>
-                <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
-                  <span className=" font-poppins  text-[#2fe439]">
-                    09:46 AM
-                  </span>
-                </td>
-                <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
-                  <span className=" font-poppins  text-[#67a2e0]">
-                    09:46 AM
-                  </span>
-                </td>
-                <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
-                  <span className=" font-poppins  text-[#67a2e0]">
-                    1 Hr 00 Mins 00 Secs
-                  </span>
-                </td>
-                <td className="mt-8 p-1 border-t-0 border-l-0 border-r-0  border-2 border-[#D6E3F2]">
-                  <span className=" font-poppins  text-[#67a2e0]">
-                    7 Hr 12 Mins 50 Secs
-                  </span>
-                </td>
-              </tr> */}
             </tbody>
           </table>
           <div className="mt-4 ">
